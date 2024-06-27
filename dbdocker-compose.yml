@@ -1,0 +1,19 @@
+version: '3.7'
+services:
+  cast_db:
+    image: postgres:12.1-alpine
+    container_name: cast_db
+    networks:
+      - my_network
+    volumes:
+      - postgres_data_cast:/var/lib/postgresql/data/
+    environment:
+      - POSTGRES_USER=cast_db_username
+      - POSTGRES_PASSWORD=cast_db_password
+      - POSTGRES_DB=cast_db_dev
+volumes:
+  postgres_data_movie:
+  postgres_data_cast:
+networks:
+  my_network:
+    external: true
