@@ -1,0 +1,101 @@
+namespace: dev
+
+castDb:
+  name: cast-db
+  replicas: 1
+  image:
+    repository: postgres
+    tag: 12.1-alpine
+  port: 5432
+  postgresUser: cast_db_username
+  secretName: db-secrets
+  secretKey: cast-db-password
+  postgresDb: cast_db_dev
+  volume:
+    name: cast-db-storage
+    mountPath: /var/lib/postgresql/data
+    storage: 1Gi
+
+castService:
+  name: cast-service
+  replicas: 1
+  image:
+    repository: dockerstudi/dts-exam-cast
+    tag: "latest"
+  command: ["uvicorn"]
+  args: ["app.main:app", "--reload", "--host", "0.0.0.0", "--port", "8000"]
+  port: 8000
+  databaseUri: postgresql://cast_db_username:cast_db_password@cast-db/cast_db_dev
+  volume:
+    name: cast-service-storage
+    mountPath: /app/data
+    claimName: cast-service-claim0
+  pvc:
+    name: cast-service-claim0
+    accessMode: ReadWriteOnce
+    storage: 1Gi
+    storageClassName: local-path
+
+movieDb:
+  name: movie-db
+  replicas: 1
+  image:
+    repository: postgres
+    tag: 12.1-alpine
+  port: 5432
+  postgresUser: movie_db_username
+  secretName: db-secrets
+  secretKey: movie-db-password
+  postgresDb: movie_db_dev
+  volume:
+    name: movie-db-storage
+    mountPath: /var/lib/postgresql/data
+    storage: 1Gi
+
+movieService:
+  name: movie-service
+  replicas: 1
+  image:
+    repository: dockerstudi/dts-exam-movie
+    tag: "latest"
+  command: ["uvicorn"]
+  args: ["app.main:app", "--reload", "--host", "0.0.0.0", "--port", "8000"]
+  port: 8000
+  databaseUri: postgresql://movie_db_username:movie_db_password@movie-db/movie_db_dev
+  castServiceHostUrl: http://cast-service:8000/api/v1/casts/
+  volume:
+    name: movie-service-storage
+    mountPath: /app/data
+    claimName: movie-service-claim0
+  pvc:
+    name: movie-service-claim0
+    accessMode: ReadWriteOnce
+    storage: 1Gi
+    storageClassName: local-path
+
+appConfig:
+  name: app-config
+  movieDbUri: postgresql://movie_db_username:movie_db_password@movie-db/movie_db_dev
+  castDbUri: postgresql://cast_db_username:cast_db_password@cast-db/cast_db_dev
+  castServiceHostUrl: http://cast-service:8000/api/v1/casts/
+
+ingress:
+  name: movie-cast-ingress
+  class: nginx
+  host: jenkins.ayaka-m.cloudns.biz
+  paths:
+    - path: /api/v1/movies
+      pathType: Prefix
+      serviceName: movie-service
+      servicePort: 8000
+    - path: /api/v1/casts
+      pathType: Prefix
+      serviceName: cast-service
+      servicePort: 8000
+
+dbSecrets:
+  name: db-secrets
+  movieDbPasswordKey: movie-db-password
+  movieDbPassword: movie_db_password
+  castDbPasswordKey: cast-db-password
+  castDbPassword: cast_db_password
