@@ -1,9 +1,0 @@
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: {{ .Values.appConfig.name }}
-  namespace: {{ .Values.namespace }}
-data:
-  MOVIE_DB_URI: {{ .Values.appConfig.movieDbUri }}
-  CAST_DB_URI: {{ .Values.appConfig.castDbUri }}
-  CAST_SERVICE_HOST_URL: {{ .Values.appConfig.castServiceHostUrl }}
