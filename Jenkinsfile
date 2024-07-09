@@ -4,8 +4,8 @@ environment { // Declaration of environment variables
     DOCKER_ID = "ayakayu" 
     DOCKER_IMAGE_CAST = "cast-service"
     DOCKER_IMAGE_MOVIE = "movie-service"
-    DOCKER_TAG = "v.${BUILD_ID}.0" // we will tag our images with the current build in order to increment the value by 1 with each new build
-    KUBECONFIG = credentials("config") 
+    DOCKER_TAG = "latest" // we will tag our images with the current build in order to increment the value by 1 with each new build
+    KUBECONFIG = credentials("kube-config") 
     DOCKER_PASS = credentials("DOCKER_HUB_PASS")
     
 }
@@ -16,9 +16,10 @@ stages {
                
                 script {
                 sh '''
-                 docker rm -f jenkins
-                 docker build -t $DOCKER_ID/$DOCKER_IMAGE_CAST:$DOCKER_TAG ./cast-service/
-                 docker build -t $DOCKER_ID/$DOCKER_IMAGE_MOVIE:$DOCKER_TAG ./movie-service/
+                 docker rmi -f ayakayu/cast-service
+                 docker rmi -f ayakayu/movie-service
+                 docker build -t ayakayu/cast-service ./cast-service
+                 docker build -t ayakayu/movie-service ./movie-service
                 sleep 6
                 '''
                 }
