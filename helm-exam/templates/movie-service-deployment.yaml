@@ -1,0 +1,27 @@
+# templates/movie-service-deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "helm-exam.fullname" . }}-movie-service
+spec:
+  replicas: {{ .Values.movieService.replicaCount }}
+  selector:
+    matchLabels:
+      app: {{ include "helm-exam.name" . }}
+      component: movie-service
+  template:
+    metadata:
+      labels:
+        app: {{ include "helm-exam.name" . }}
+        component: movie-service
+    spec:
+      containers:
+        - name: movie-service
+          image: "{{ .Values.movieService.image }}:{{ .Values.movieService.tag }}"
+          ports:
+            - containerPort: {{ .Values.movieService.containerPort }}
+          env:
+            - name: DATABASE_URI
+              value: "{{ .Values.movieService.environment.DATABASE_URI }}"
+            - name: CAST_SERVICE_HOST_URL
+              value: "{{ .Values.movieService.environment.CAST_SERVICE_HOST_URL }}"

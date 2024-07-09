@@ -1,166 +1,71 @@
 pipeline {
     environment {
-        // DockerHub credentials
         DOCKER_ID = "ayakayu"
-        DOCKER_IMAGE_CAST = "ayakayu/cast-service"
-        DOCKER_IMAGE_MOVIE = "ayakayu/movie-service"
-        DOCKER_TAG = "v.${BUILD_ID}.0" // Tagging images with the current build ID
-        DOCKER_PASS = credentials("DOCKER_HUB_PASS") // DockerHub password from Jenkins credentials
-
-        // Kubernetes credentials
-        KUBECONFIG = credentials("config") // kubeconfig file from Jenkins credentials
+        DOCKER_CAST_IMAGE = "cast-service"
+        DOCKER_MOVIE_IMAGE = "movie-service"
+        DOCKER_TAG = "v.${BUILD_ID}.0"
     }
     agent any
     stages {
-        stage('Docker Build Image') {
-            parallel {
-                stage('Build Cast Service') {
-                    steps {
-                        script {
-                            sh '''
-                                docker build -t $DOCKER_ID/$DOCKER_IMAGE_CAST:$DOCKER_TAG ./cast-service
-                            '''
-                        }
-                    }
-                }
-                stage('Build Movie Service') {
-                    steps {
-                        script {
-                            sh '''
-                                docker build -t $DOCKER_ID/$DOCKER_IMAGE_MOVIE:$DOCKER_TAG ./movie-service
-                            '''
-                        }
-                    }
-                }
-            }
-        }
-        stage('Docker Push DockerHub') {
-            parallel {
-                stage('Push Cast Service') {
-                    steps {
-                        script {
-                            sh '''
-                                docker login -u $DOCKER_ID -p $DOCKER_PASS
-                                docker push $DOCKER_ID/$DOCKER_IMAGE_CAST:$DOCKER_TAG
-                            '''
-                        }
-                    }
-                }
-                stage('Push Movie Service') {
-                    steps {
-                        script {
-                            sh '''
-                                docker login -u $DOCKER_ID -p $DOCKER_PASS
-                                docker push $DOCKER_ID/$DOCKER_IMAGE_MOVIE:$DOCKER_TAG
-                            '''
-                        }
-                    }
-                }
-            }
-        }
-        stage('Deploy to dev-env') {
+        stage('Docker Build Cast Image') {
             steps {
                 script {
                     sh '''
-                        rm -Rf .kube
-                        mkdir .kube
-                        ls
-                        cat $KUBECONFIG > .kube/config
+                      docker rm -f jenkins || true
+                      docker build -t $DOCKER_ID/$DOCKER_CAST_IMAGE:$DOCKER_TAG cast-service/
+                      sleep 6
+                    '''
+                }
+            }
+        }
 
-                        # Check if the release exists
-                        if helm status dev-env --namespace dev >/dev/null 2>&1; then
-                            # Release exists, perform an upgrade
-                            helm upgrade --install dev-env ./microservices --namespace dev --set castService.image.tag=${DOCKER_TAG},movieService.image.tag=${DOCKER_TAG}
-                        else
-                            # Release does not exist, perform an installation
-                            helm install dev-env ./microservices --namespace dev --set castService.image.tag=${DOCKER_TAG},movieService.image.tag=${DOCKER_TAG}
-                        fi
+        stage('Docker Build Movie Image') {
+            steps {
+                script {
+                    sh '''
+                      docker rm -f jenkins || true
+                      docker build -t $DOCKER_ID/$DOCKER_MOVIE_IMAGE:$DOCKER_TAG movie-service/
+                      sleep 6
                     '''
                 }
             }
         }
-        stage('Deploy to qa-env') {
-            steps {
-                script {
-                    sh '''
-                        rm -Rf .kube
-                        mkdir .kube
-                        ls
-                        cat $KUBECONFIG > .kube/config
-                        
-                        # Check if the release exists
-                        if helm status qa-env --namespace qa >/dev/null 2>&1; then
-                            # Release exists, perform an upgrade
-                            helm upgrade --install qa-env ./microservices --namespace qa --set castService.image.tag=${DOCKER_TAG},movieService.image.tag=${DOCKER_TAG} --set namespace=qa --set ingress.host=qa.datascientest-landes.cloudns.ch
-                        else
-                            # Release does not exist, perform an installation
-                            helm install qa-env ./microservices --namespace qa --set castService.image.tag=${DOCKER_TAG},movieService.image.tag=${DOCKER_TAG} --set namespace=qa --set ingress.host=qa.datascientest-landes.cloudns.ch
-                        fi
-                    '''
-                }
-            }
-        }
-        stage('Deploy to staging-env') {
-            steps {
-                script {
-                    input message: 'Do you want to deploy to production?', ok: 'Deploy'
-                    sh '''
-                        rm -Rf .kube
-                        mkdir .kube
-                        ls
-                        cat $KUBECONFIG > .kube/config
 
-                        # Check if the release exists
-                        if helm status staging-env --namespace staging >/dev/null 2>&1; then
-                            # Release exists, perform an upgrade
-                            helm upgrade --install staging-env ./microservices --namespace staging --set castService.image.tag=${DOCKER_TAG},movieService.image.tag=${DOCKER_TAG} --set namespace=staging --set ingress.host=staging.datascientest-landes.cloudns.ch
-                        else
-                            # Release does not exist, perform an installation
-                            helm install staging-env ./microservices --namespace staging --set castService.image.tag=${DOCKER_TAG},movieService.image.tag=${DOCKER_TAG} --set namespace=staging --set ingress.host=staging.datascientest-landes.cloudns.ch
-                        fi
-                    '''
-                }
-            }
-        }
-        stage('Deploy to production') {
+        stage('Docker Run Cast Image') {
             steps {
                 script {
-                    input message: 'Do you want to deploy to production?', ok: 'Deploy'
                     sh '''
-                        rm -Rf .kube
-                        mkdir .kube
-                        ls
-                        cat $KUBECONFIG > .kube/config
-
-                        # Check if the release exists
-                        if helm status production-env --namespace prod >/dev/null 2>&1; then
-                            # Release exists, perform an upgrade
-                            helm upgrade production-env ./microservices \
-                                --namespace prod \
-                                --set castService.image.tag=${DOCKER_TAG} \
-                                --set movieService.image.tag=${DOCKER_TAG} \
-                                --set namespace=prod \
-                                --set ingress.host=prod.datascientest-landes.cloudns.ch
-                        else
-                            # Release does not exist, perform an installation
-                            helm install production-env ./microservices \
-                                --namespace prod \
-                                --set castService.image.tag=${DOCKER_TAG} \
-                                --set movieService.image.tag=${DOCKER_TAG} \
-                                --set namespace=prod \
-                                --set ingress.host=jenkins.ayaka-m.cloudns.biz
-                        fi
+                     docker run -d -p 8002:8000 --name jenkins-cast $DOCKER_ID/$DOCKER_CAST_IMAGE:$DOCKER_TAG
+                     sleep 10
                     '''
                 }
             }
         }
-    }
-    post {
-        success {
-            echo 'Pipeline completed successfully.'
+
+        stage('Docker Run Movie Image') {
+            steps {
+                script {
+                    sh '''
+                     docker run -d -p 8001:8000 --name jenkins-movie $DOCKER_ID/$DOCKER_MOVIE_IMAGE:$DOCKER_TAG
+                     sleep 10
+                    '''
+                }
+            }
         }
-        failure {
-            echo 'Pipeline failed.'
+
+        stage('Docker Push') {
+            environment {
+                DOCKER_PASS = credentials("DOCKER_HUB_PASS")
+            }
+            steps {
+                script {
+                    sh '''
+                     docker login -u $DOCKER_ID -p $DOCKER_PASS
+                     docker push $DOCKER_ID/$DOCKER_CAST_IMAGE:$DOCKER_TAG
+                     docker push $DOCKER_ID/$DOCKER_MOVIE_IMAGE:$DOCKER_TAG
+                    '''
+                }
+            }
         }
     }
 }

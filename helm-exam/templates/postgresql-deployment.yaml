@@ -1,0 +1,93 @@
+# templates/postgresql-deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "helm-exam.fullname" . }}-movie-db
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: {{ include "helm-exam.name" . }}
+      component: movie-db
+  template:
+    metadata:
+      labels:
+        app: {{ include "helm-exam.name" . }}
+        component: movie-db
+    spec:
+      containers:
+        - name: movie-db
+          image: "{{ .Values.postgresql.movie.image }}"
+          env:
+            - name: POSTGRES_USER
+              value: "{{ .Values.postgresql.movie.user }}"
+            - name: POSTGRES_PASSWORD
+              value: "{{ .Values.postgresql.movie.password }}"
+            - name: POSTGRES_DB
+              value: "{{ .Values.postgresql.movie.database }}"
+          volumeMounts:
+            - name: postgres-data
+              mountPath: /var/lib/postgresql/data
+      volumes:
+        - name: postgres-data
+          persistentVolumeClaim:
+            claimName: movie-db-pvc
+
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: movie-db-pvc
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "helm-exam.fullname" . }}-cast-db
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: {{ include "helm-exam.name" . }}
+      component: cast-db
+  template:
+    metadata:
+      labels:
+        app: {{ include "helm-exam.name" . }}
+        component: cast-db
+    spec:
+      containers:
+        - name: cast-db
+          image: "{{ .Values.postgresql.cast.image }}"
+          env:
+            - name: POSTGRES_USER
+              value: "{{ .Values.postgresql.cast.user }}"
+            - name: POSTGRES_PASSWORD
+              value: "{{ .Values.postgresql.cast.password }}"
+            - name: POSTGRES_DB
+              value: "{{ .Values.postgresql.cast.database }}"
+          volumeMounts:
+            - name: cast-postgres-data
+              mountPath: /var/lib/postgresql/data
+      volumes:
+        - name: cast-postgres-data
+          persistentVolumeClaim:
+            claimName: cast-db-pvc
+
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: cast-db-pvc
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi

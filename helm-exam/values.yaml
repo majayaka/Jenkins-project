@@ -1,0 +1,50 @@
+# values.yaml
+movieService:
+  image: ayakayu/movie-service
+  tag: "latest"
+  replicaCount: 1
+  servicePort: 8001
+  containerPort: 8000
+  nodePort: 30001
+  environment:
+    DATABASE_URI: "postgresql://movie_db_username:movie_db_password@movie_db/movie_db_dev"
+    CAST_SERVICE_HOST_URL: "http://cast-service:8000/api/v1/casts/"
+
+castService:
+  image: ayakayu/cast-service
+  tag: "latest"
+  replicaCount: 1
+  servicePort: 8002
+  containerPort: 8000
+  nodePort: 30002
+  environment:
+    DATABASE_URI: "postgresql://cast_db_username:cast_db_password@cast_db:5432/cast_db_dev"
+
+postgresql:
+  movie:
+    image: postgres:12.1-alpine
+    user: movie_db_username
+    password: movie_db_password
+    database: movie_db_dev
+    persistentVolume:
+      storage: 1Gi
+  cast:
+    image: postgres:12.1-alpine
+    user: cast_db_username
+    password: cast_db_password
+    database: cast_db_dev
+    persistentVolume:
+      storage: 1Gi
+
+nginx:
+  image: nginx:latest
+  ports:
+    - "8080:8080"
+  config: "./nginx_config.conf"
+
+serviceAccount:
+  create: true
+  automountServiceAccountToken: true
+
+service:
+  type: ClusterIP

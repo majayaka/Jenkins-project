@@ -1,0 +1,25 @@
+# templates/cast-service-deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "helm-exam.fullname" . }}-cast-service
+spec:
+  replicas: {{ .Values.castService.replicaCount }}
+  selector:
+    matchLabels:
+      app: {{ include "helm-exam.name" . }}
+      component: cast-service
+  template:
+    metadata:
+      labels:
+        app: {{ include "helm-exam.name" . }}
+        component: cast-service
+    spec:
+      containers:
+        - name: cast-service
+          image: "{{ .Values.castService.image }}:{{ .Values.castService.tag }}"
+          ports:
+            - containerPort: {{ .Values.castService.containerPort }}
+          env:
+            - name: DATABASE_URI
+              value: "{{ .Values.castService.environment.DATABASE_URI }}"

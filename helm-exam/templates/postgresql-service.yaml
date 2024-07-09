@@ -1,0 +1,23 @@
+# templates/postgresql-service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "helm-exam.fullname" . }}-movie-db
+spec:
+  type: ClusterIP
+  ports:
+    - port: 5432
+  selector:
+    app: {{ include "helm-exam.name" . }}
+    component: movie-db
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "helm-exam.fullname" . }}-cast-db
+spec:
+  ports:
+    - port: 5432
+  selector:
+    app: {{ include "helm-exam.name" . }}
+    component: cast-db

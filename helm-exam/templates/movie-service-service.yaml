@@ -1,0 +1,14 @@
+# templates/movie-service-service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "helm-exam.fullname" . }}-movie-service
+spec:
+  type: NodePort
+  ports:
+    - port: {{ .Values.movieService.servicePort }}
+      targetPort: {{ .Values.movieService.containerPort }}
+      nodePort: {{ .Values.movieService.nodePort | default 30001 }}
+  selector:
+    app: {{ include "helm-exam.name" . }}
+    component: movie-service
