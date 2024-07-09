@@ -12,8 +12,8 @@ pipeline {
             steps {
                 script {
                     sh '''
-                    docker rmi -f ayakayu/cast-service
-                    docker rmi -f ayakayu/movie-service
+                    docker rmi -f ayakayu/cast-service || true
+                    docker rmi -f ayakayu/movie-service || true
                     docker build -t ayakayu/cast-service ./cast-service
                     docker build -t ayakayu/movie-service ./movie-service
                     sleep 6
@@ -34,7 +34,7 @@ pipeline {
         }
         stage('Deployment in dev') {
             steps {
-                withCredentials([file(credentialsId: 'kubeconfig-file', variable: 'KUBECONFIG')]) {  // 変更箇所
+                withCredentials([file(credentialsId: 'kubeconfig-file', variable: 'KUBECONFIG')]) {
                     script {
                         sh '''
                         rm -Rf .kube
@@ -70,7 +70,7 @@ pipeline {
         }
         stage('Deployment in staging') {
             steps {
-                withCredentials([file(credentialsId: 'kubeconfig-file', variable: 'KUBECONFIG')]) {  // 変更箇所
+                withCredentials([file(credentialsId: 'kubeconfig-file', variable: 'KUBECONFIG')]) {
                     script {
                         sh '''
                         rm -Rf .kube
@@ -106,7 +106,7 @@ pipeline {
         }
         stage('Deployment in QA') {
             steps {
-                withCredentials([file(credentialsId: 'kubeconfig-file', variable: 'KUBECONFIG')]) {  // 変更箇所
+                withCredentials([file(credentialsId: 'kubeconfig-file', variable: 'KUBECONFIG')]) {
                     script {
                         sh '''
                         rm -Rf .kube
@@ -148,7 +148,7 @@ pipeline {
                 timeout(time: 15, unit: "MINUTES") {
                     input message: 'Do you want to deploy in production?', ok: 'Yes'
                 }
-                withCredentials([file(credentialsId: 'kubeconfig-file', variable: 'KUBECONFIG')]) {  // 変更箇所
+                withCredentials([file(credentialsId: 'kubeconfig-file', variable: 'KUBECONFIG')]) {
                     script {
                         sh '''
                         rm -Rf .kube
