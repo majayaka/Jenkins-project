@@ -42,7 +42,7 @@ stages {
 
         }
 
-stage('Deploiement en dev'){
+stage('Deployment in dev'){
             steps {
                 script {
                 sh '''
@@ -77,7 +77,7 @@ stage('Deploiement en dev'){
             }
 
         }
-stage('Deploiement en staging'){
+stage('Deployment in staging'){
             steps {
                 script {
                 sh '''
@@ -113,7 +113,7 @@ stage('Deploiement en staging'){
 
         }
 
-stage('Deploiement en QA'){
+stage('Deployment in QA'){
             steps {
                 script {
                 sh '''
@@ -147,13 +147,13 @@ stage('Deploiement en QA'){
                 }
             }
         }
-  stage('Deploiement en prod'){
+  stage('Deployment in prod'){
         when {
             expression { env.GIT_BRANCH == 'origin/master'}
         }
             steps {
                     timeout(time: 15, unit: "MINUTES") {
-                        input message: 'Voulez-vous déployer en production ?', ok: 'Oui'
+                        input message: 'Do you want to deploy in production ?', ok: 'Yes'
                     }
 
                 script {
