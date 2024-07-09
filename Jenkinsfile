@@ -49,13 +49,13 @@ stage('Deployment in dev'){
                 rm -Rf .kube
                 mkdir .kube
                 cat $KUBECONFIG > .kube/config
-                cp manifests/db/values/cast-db/values-dev.yaml values.yml
+                cp helm-exam/values.yml
                 cat values.yml
-                helm upgrade --install cast-db-dev manifests/db/ --values=values.yml --namespace dev
+                helm upgrade --install cast-db-dev helm-exam/ --values=values.yml --namespace dev
                 
-                cp manifests/db/values/movie-db/values-dev.yaml values.yml
+                cp helm-exam/values.yml
                 cat values.yml
-                helm upgrade --install movie-db-dev manifests/db/ --values=values.yml --namespace dev
+                helm upgrade --install movie-db-dev helm-exam/ --values=values.yml --namespace dev
                 '''
                 }
                 script {
@@ -63,15 +63,15 @@ stage('Deployment in dev'){
                 rm -Rf .kube
                 mkdir .kube
                 cat $KUBECONFIG > .kube/config
-                cp manifests/service/values/cast-service/values-dev.yaml values.yml
+                cp helm-exam/values.yml
                 sed -i "s+tag:.*+tag: ${DOCKER_TAG}+g" values.yml
                 cat values.yml
-                helm upgrade --install cast-service-dev manifests/service/ --values=values.yml --namespace dev
+                helm upgrade --install cast-service-dev helm-exam/ --values=values.yml --namespace dev
                 
-                cp manifests/service/values/movie-service/values-dev.yaml values.yml
+                cp helm-exam/values.yml
                 sed -i "s+tag:.*+tag: ${DOCKER_TAG}+g" values.yml
                 cat values.yml
-                helm upgrade --install movie-service-dev manifests/service/ --values=values.yml --namespace dev
+                helm upgrade --install movie-service-dev helm-exam/ --values=values.yml --namespace dev
                 '''
                 }
             }
@@ -84,13 +84,13 @@ stage('Deployment in staging'){
                 rm -Rf .kube
                 mkdir .kube
                 cat $KUBECONFIG > .kube/config
-                cp manifests/db/values/cast-db/values-staging.yaml values.yml
+                cp helm-exam/values.yml
                 cat values.yml
-                helm upgrade --install cast-db-staging manifests/db/ --values=values.yml --namespace staging
+                helm upgrade --install cast-db-staging helm-exam/ --values=values.yml --namespace staging
                 
-                cp manifests/db/values/movie-db/values-staging.yaml values.yml
+                cp helm-exam/values.yml
                 cat values.yml
-                helm upgrade --install movie-db-staging manifests/db/ --values=values.yml --namespace staging
+                helm upgrade --install movie-db-staging helm-exam/ --values=values.yml --namespace staging
                 '''
                 }
                 script {
@@ -98,15 +98,15 @@ stage('Deployment in staging'){
                 rm -Rf .kube
                 mkdir .kube
                 cat $KUBECONFIG > .kube/config
-                cp manifests/service/values/cast-service/values-staging.yaml values.yml
+                cp helm-exam/values.yml
                 sed -i "s+tag:.*+tag: ${DOCKER_TAG}+g" values.yml
                 cat values.yml
-                helm upgrade --install cast-service-staging manifests/service/ --values=values.yml --namespace staging
+                helm upgrade --install cast-service-staging helm-exam/ --values=values.yml --namespace staging
                 
-                cp manifests/service/values/movie-service/values-staging.yaml values.yml
+                cp helm-exam/values.yml
                 sed -i "s+tag:.*+tag: ${DOCKER_TAG}+g" values.yml
                 cat values.yml
-                helm upgrade --install movie-service-staging manifests/service/ --values=values.yml --namespace staging
+                helm upgrade --install movie-service-staging helm-exam/ --values=values.yml --namespace staging
                 '''
                 }
             }
@@ -120,13 +120,13 @@ stage('Deployment in QA'){
                 rm -Rf .kube
                 mkdir .kube
                 cat $KUBECONFIG > .kube/config
-                cp manifests/db/values/cast-db/values-qa.yaml values.yml
+                cp helm-exam/values.yml
                 cat values.yml
-                helm upgrade --install cast-db-qa manifests/db/ --values=values.yml --namespace qa
+                helm upgrade --install cast-db-qa helm-exam/ --values=values.yml --namespace qa
                 
-                cp manifests/db/values/movie-db/values-qa.yaml values.yml
+                cp helm-exam/values.yml
                 cat values.yml
-                helm upgrade --install movie-db-qa manifests/db/ --values=values.yml --namespace qa
+                helm upgrade --install movie-db-qa helm-exam/ --values=values.yml --namespace qa
                 '''
                 }
                 script {
@@ -134,19 +134,20 @@ stage('Deployment in QA'){
                 rm -Rf .kube
                 mkdir .kube
                 cat $KUBECONFIG > .kube/config
-                cp manifests/service/values/cast-service/values-qa.yaml values.yml
+                cp helm-exam/values.yml
                 sed -i "s+tag:.*+tag: ${DOCKER_TAG}+g" values.yml
                 cat values.yml
-                helm upgrade --install cast-service-qa manifests/service/ --values=values.yml --namespace qa
+                helm upgrade --install cast-service-qa helm-exam/ --values=values.yml --namespace qa
                 
-                cp manifests/service/values/movie-service/values-qa.yaml values.yml
+                cp helm-exam/values.yml
                 sed -i "s+tag:.*+tag: ${DOCKER_TAG}+g" values.yml
                 cat values.yml
-                helm upgrade --install movie-service-qa manifests/service/ --values=values.yml --namespace qa
+                helm upgrade --install movie-service-qa helm-exam/ --values=values.yml --namespace qa
                 '''
                 }
             }
         }
+
   stage('Deployment in prod'){
         when {
             expression { env.GIT_BRANCH == 'origin/master'}
@@ -161,13 +162,13 @@ stage('Deployment in QA'){
                 rm -Rf .kube
                 mkdir .kube
                 cat $KUBECONFIG > .kube/config
-                cp manifests/db/values/cast-db/values-prod.yaml values.yml
+                cp helm-exam/values.yml
                 cat values.yml
-                helm upgrade --install cast-db-prod manifests/db/  --values=values.yml --namespace prod
+                helm upgrade --install cast-db-prod helm-exam/ --values=values.yml --namespace prod
                 
-                cp manifests/db/values/movie-db/values-prod.yaml values.yml
+                cp helm-exam/values.yml
                 cat values.yml
-                helm upgrade --install movie-db-prod manifests/db/ --values=values.yml --namespace prod
+                helm upgrade --install movie-db-prod helm-exam/ --values=values.yml --namespace prod
                 '''
                 }
 
@@ -176,15 +177,15 @@ stage('Deployment in QA'){
                 rm -Rf .kube
                 mkdir .kube
                 cat $KUBECONFIG > .kube/config
-                cp manifests/service/values/cast-service/values-prod.yaml values.yml
+                cp helm-exam/values.yml
                 sed -i "s+tag:.*+tag: ${DOCKER_TAG}+g" values.yml
                 cat values.yml
-                helm upgrade --install cast-service-prod manifests/service/ --values=values.yml --namespace prod
+                helm upgrade --install cast-service-prod helm-exam/ --values=values.yml --namespace prod
                 
                 cp manifests/service/values/movie-service/values-prod.yaml values.yml
                 sed -i "s+tag:.*+tag: ${DOCKER_TAG}+g" values.yml
                 cat values.yml
-                helm upgrade --install movie-service-prod manifests/service/ --values=values.yml --namespace prod
+                helm upgrade --install movie-service-prod helm-exam/ --values=values.yml --namespace prod
                 '''
                 }
             }
