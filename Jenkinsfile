@@ -6,6 +6,7 @@ environment { // Declaration of environment variables
     DOCKER_IMAGE_MOVIE = "movie-service"
     DOCKER_TAG = "v.${BUILD_ID}.0" // we will tag our images with the current build in order to increment the value by 1 with each new build
     KUBECONFIG = credentials("config") 
+    DOCKER_PASS = credentials("DOCKER_HUB_PASS")
     
 }
 agent any
