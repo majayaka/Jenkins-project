@@ -124,6 +124,12 @@ pipeline {
                             echo "No PVs found for namespace dev."
                         fi
 
+                        # Fix PVC metadata if it exists
+                        if kubectl get pvc movie-db-pvc --namespace=dev; then
+                            kubectl annotate pvc movie-db-pvc meta.helm.sh/release-name=movie-db-dev --overwrite
+                            kubectl annotate pvc movie-db-pvc meta.helm.sh/release-namespace=dev --overwrite
+                        fi
+
                         # Deploy the Helm charts
                         helm upgrade --install cast-db-dev helm-exam/ --values=helm-exam/values.yaml --namespace dev
                         helm upgrade --install movie-db-dev helm-exam/ --values=helm-exam/values.yaml --namespace dev
@@ -175,6 +181,12 @@ pipeline {
                             echo "No PVs found for namespace qa."
                         fi
 
+                        # Fix PVC metadata if it exists
+                        if kubectl get pvc movie-db-pvc --namespace=qa; then
+                            kubectl annotate pvc movie-db-pvc meta.helm.sh/release-name=movie-db-qa --overwrite
+                            kubectl annotate pvc movie-db-pvc meta.helm.sh/release-namespace=qa --overwrite
+                        fi
+
                         # Deploy the Helm charts
                         helm upgrade --install cast-db-qa helm-exam/ --values=helm-exam/values.yaml --namespace qa
                         helm upgrade --install movie-db-qa helm-exam/ --values=helm-exam/values.yaml --namespace qa
@@ -224,6 +236,12 @@ pipeline {
                             done
                         else
                             echo "No PVs found for namespace staging."
+                        fi
+
+                        # Fix PVC metadata if it exists
+                        if kubectl get pvc movie-db-pvc --namespace=staging; then
+                            kubectl annotate pvc movie-db-pvc meta.helm.sh/release-name=movie-db-staging --overwrite
+                            kubectl annotate pvc movie-db-pvc meta.helm.sh/release-namespace=staging --overwrite
                         fi
 
                         # Deploy the Helm charts
@@ -281,6 +299,12 @@ pipeline {
                             done
                         else
                             echo "No PVs found for namespace prod."
+                        fi
+
+                        # Fix PVC metadata if it exists
+                        if kubectl get pvc movie-db-pvc --namespace=prod; then
+                            kubectl annotate pvc movie-db-pvc meta.helm.sh/release-name=movie-db-prod --overwrite
+                            kubectl annotate pvc movie-db-pvc meta.helm.sh/release-namespace=prod --overwrite
                         fi
 
                         # Deploy the Helm charts
