@@ -55,7 +55,8 @@ pipeline {
                         kubectl create namespace dev
                         kubectl config set-context --current --namespace=dev
                         
-                        # Delete specific PVCs
+                        # Delete all resources in the namespace before deleting PVCs
+                        kubectl delete all --all --namespace=dev
                         kubectl delete pvc movie-db-pvc --namespace=dev --ignore-not-found
                         kubectl delete pvc cast-db-pvc --namespace=dev --ignore-not-found
                         
@@ -84,7 +85,8 @@ pipeline {
                         kubectl create namespace qa
                         kubectl config set-context --current --namespace=qa
                         
-                        # Delete specific PVCs
+                        # Delete all resources in the namespace before deleting PVCs
+                        kubectl delete all --all --namespace=qa
                         kubectl delete pvc movie-db-pvc --namespace=qa --ignore-not-found
                         kubectl delete pvc cast-db-pvc --namespace=qa --ignore-not-found
                         
@@ -113,7 +115,8 @@ pipeline {
                         kubectl create namespace staging
                         kubectl config set-context --current --namespace=staging
                         
-                        # Delete specific PVCs
+                        # Delete all resources in the namespace before deleting PVCs
+                        kubectl delete all --all --namespace=staging
                         kubectl delete pvc movie-db-pvc --namespace=staging --ignore-not-found
                         kubectl delete pvc cast-db-pvc --namespace=staging --ignore-not-found
                         
@@ -148,7 +151,8 @@ pipeline {
                         kubectl create namespace prod
                         kubectl config set-context --current --namespace=prod
                         
-                        # Delete specific PVCs
+                        # Delete all resources in the namespace before deleting PVCs
+                        kubectl delete all --all --namespace=prod
                         kubectl delete pvc movie-db-pvc --namespace=prod --ignore-not-found
                         kubectl delete pvc cast-db-pvc --namespace=prod --ignore-not-found
                         
