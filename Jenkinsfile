@@ -20,7 +20,7 @@ pipeline {
                     docker rmi -f $DOCKER_ID/$DOCKER_IMAGE_CAST:$DOCKER_TAG || true
                     docker rmi -f $DOCKER_ID/$DOCKER_IMAGE_MOVIE:$DOCKER_TAG || true
                     docker build -t $DOCKER_ID/$DOCKER_IMAGE_CAST:$DOCKER_TAG ./cast-service
-                    docker build -t $DOCKER_ID/$DOCKER_IMAGE_MOVIE:$DOCKER_TAG ./movie-service
+                    docker build -t $DOCKER_ID/$DOCKER_IMAGE_MOVIE ./movie-service
                     sleep 6
                     '''
                 }
@@ -42,9 +42,19 @@ pipeline {
                 withCredentials([file(credentialsId: 'kubeconfig-file', variable: 'KUBECONFIG')]) {
                     script {
                         sh '''
+                        # Copy kubeconfig file
+                        cp $KUBECONFIG /tmp/kubeconfig
+                        
+                        # Configure the auth of file
+                        chmod 600 /tmp/kubeconfig
+                        
+                        # Configure env
+                        export KUBECONFIG=/tmp/kubeconfig
+                        
                         kubectl delete namespace dev --ignore-not-found
                         kubectl create namespace dev
                         kubectl config set-context --current --namespace=dev
+                        
                         helm upgrade --install cast-db-dev helm-exam/ --values=helm-exam/values-dev.yml --namespace dev
                         helm upgrade --install movie-db-dev helm-exam/ --values=helm-exam/values-dev.yml --namespace dev
                         '''
@@ -57,9 +67,19 @@ pipeline {
                 withCredentials([file(credentialsId: 'kubeconfig-file', variable: 'KUBECONFIG')]) {
                     script {
                         sh '''
+                        # Copy kubeconfig file
+                        cp $KUBECONFIG /tmp/kubeconfig
+                        
+                        # Configure the auth of file
+                        chmod 600 /tmp/kubeconfig
+                        
+                        # Configure env
+                        export KUBECONFIG=/tmp/kubeconfig
+                        
                         kubectl delete namespace qa --ignore-not-found
                         kubectl create namespace qa
                         kubectl config set-context --current --namespace=qa
+                        
                         helm upgrade --install cast-db-qa helm-exam/ --values=helm-exam/values-qa.yml --namespace qa
                         helm upgrade --install movie-db-qa helm-exam/ --values=helm-exam/values-qa.yml --namespace qa
                         '''
@@ -72,9 +92,19 @@ pipeline {
                 withCredentials([file(credentialsId: 'kubeconfig-file', variable: 'KUBECONFIG')]) {
                     script {
                         sh '''
+                        # Copy kubeconfig file
+                        cp $KUBECONFIG /tmp/kubeconfig
+                        
+                        # Configure the auth of file
+                        chmod 600 /tmp/kubeconfig
+                        
+                        # Configure env
+                        export KUBECONFIG=/tmp/kubeconfig
+                        
                         kubectl delete namespace staging --ignore-not-found
                         kubectl create namespace staging
                         kubectl config set-context --current --namespace=staging
+                        
                         helm upgrade --install cast-db-staging helm-exam/ --values=helm-exam/values-staging.yml --namespace staging
                         helm upgrade --install movie-db-staging helm-exam/ --values=helm-exam/values-staging.yml --namespace staging
                         '''
@@ -93,9 +123,19 @@ pipeline {
                 withCredentials([file(credentialsId: 'kubeconfig-file', variable: 'KUBECONFIG')]) {
                     script {
                         sh '''
+                        # Copy kubeconfig file
+                        cp $KUBECONFIG /tmp/kubeconfig
+                        
+                        # Configure the auth of file
+                        chmod 600 /tmp/kubeconfig
+                        
+                        # Configure env
+                        export KUBECONFIG=/tmp/kubeconfig
+                        
                         kubectl delete namespace prod --ignore-not-found
                         kubectl create namespace prod
                         kubectl config set-context --current --namespace=prod
+                        
                         helm upgrade --install cast-db-prod helm-exam/ --values=helm-exam/values-prod.yml --namespace prod
                         helm upgrade --install movie-db-prod helm-exam/ --values=helm-exam/values-prod.yml --namespace prod
                         '''
