@@ -64,8 +64,9 @@ pipeline {
                         kubectl delete pvc movie-db-pvc --namespace=dev --ignore-not-found || true
                         kubectl delete pvc cast-db-pvc --namespace=dev --ignore-not-found || true
                         
-                        # Patch and delete PVs
-                        for pv in $(kubectl get pv -o jsonpath='{.items[?(@.spec.claimRef.namespace=="dev")].metadata.name}'); do
+                        # Get PV names and delete them
+                        pv_names=$(kubectl get pv -o jsonpath='{.items[?(@.spec.claimRef.namespace=="dev")].metadata.name}')
+                        for pv in $pv_names; do
                             kubectl patch pv $pv -p '{"metadata":{"finalizers":null}}' || true
                             kubectl delete pv $pv --ignore-not-found || true
                         done
@@ -105,8 +106,9 @@ pipeline {
                         kubectl delete pvc movie-db-pvc --namespace=qa --ignore-not-found || true
                         kubectl delete pvc cast-db-pvc --namespace=qa --ignore-not-found || true
 
-                        # Patch and delete PVs
-                        for pv in $(kubectl get pv -o jsonpath='{.items[?(@.spec.claimRef.namespace=="qa")].metadata.name}'); do
+                        # Get PV names and delete them
+                        pv_names=$(kubectl get pv -o jsonpath='{.items[?(@.spec.claimRef.namespace=="qa")].metadata.name}')
+                        for pv in $pv_names; do
                             kubectl patch pv $pv -p '{"metadata":{"finalizers":null}}' || true
                             kubectl delete pv $pv --ignore-not-found || true
                         done
@@ -146,8 +148,9 @@ pipeline {
                         kubectl delete pvc movie-db-pvc --namespace=staging --ignore-not-found || true
                         kubectl delete pvc cast-db-pvc --namespace=staging --ignore-not-found || true
 
-                        # Patch and delete PVs
-                        for pv in $(kubectl get pv -o jsonpath='{.items[?(@.spec.claimRef.namespace=="staging")].metadata.name}'); do
+                        # Get PV names and delete them
+                        pv_names=$(kubectl get pv -o jsonpath='{.items[?(@.spec.claimRef.namespace=="staging")].metadata.name}')
+                        for pv in $pv_names; do
                             kubectl patch pv $pv -p '{"metadata":{"finalizers":null}}' || true
                             kubectl delete pv $pv --ignore-not-found || true
                         done
@@ -193,8 +196,9 @@ pipeline {
                         kubectl delete pvc movie-db-pvc --namespace=prod --ignore-not-found || true
                         kubectl delete pvc cast-db-pvc --namespace=prod --ignore-not-found || true
 
-                        # Patch and delete PVs
-                        for pv in $(kubectl get pv -o jsonpath='{.items[?(@.spec.claimRef.namespace=="prod")].metadata.name}'); do
+                        # Get PV names and delete them
+                        pv_names=$(kubectl get pv -o jsonpath='{.items[?(@.spec.claimRef.namespace=="prod")].metadata.name}')
+                        for pv in $pv_names; do
                             kubectl patch pv $pv -p '{"metadata":{"finalizers":null}}' || true
                             kubectl delete pv $pv --ignore-not-found || true
                         done
