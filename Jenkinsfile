@@ -20,7 +20,7 @@ pipeline {
                     docker rmi -f $DOCKER_ID/$DOCKER_IMAGE_CAST:$DOCKER_TAG || true
                     docker rmi -f $DOCKER_ID/$DOCKER_IMAGE_MOVIE:$DOCKER_TAG || true
                     docker build -t $DOCKER_ID/$DOCKER_IMAGE_CAST:$DOCKER_TAG ./cast-service
-                    docker build -t $DOCKER_ID/$DOCKER_IMAGE_MOVIE ./movie-service
+                    docker build -t $DOCKER_ID/$DOCKER_IMAGE_MOVIE:$DOCKER_TAG ./movie-service
                     sleep 6
                     '''
                 }
@@ -51,6 +51,9 @@ pipeline {
                         # Configure env
                         export KUBECONFIG=/tmp/kubeconfig
                         
+                        # Debug: Check if the values file exists
+                        ls -l helm-exam/values-dev.yml
+                        
                         kubectl delete namespace dev --ignore-not-found
                         kubectl create namespace dev
                         kubectl config set-context --current --namespace=dev
@@ -76,6 +79,9 @@ pipeline {
                         # Configure env
                         export KUBECONFIG=/tmp/kubeconfig
                         
+                        # Debug: Check if the values file exists
+                        ls -l helm-exam/values-qa.yml
+                        
                         kubectl delete namespace qa --ignore-not-found
                         kubectl create namespace qa
                         kubectl config set-context --current --namespace=qa
@@ -100,6 +106,9 @@ pipeline {
                         
                         # Configure env
                         export KUBECONFIG=/tmp/kubeconfig
+                        
+                        # Debug: Check if the values file exists
+                        ls -l helm-exam/values-staging.yml
                         
                         kubectl delete namespace staging --ignore-not-found
                         kubectl create namespace staging
@@ -131,6 +140,9 @@ pipeline {
                         
                         # Configure env
                         export KUBECONFIG=/tmp/kubeconfig
+                        
+                        # Debug: Check if the values file exists
+                        ls -l helm-exam/values-prod.yml
                         
                         kubectl delete namespace prod --ignore-not-found
                         kubectl create namespace prod
