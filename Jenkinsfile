@@ -187,8 +187,18 @@ pipeline {
                         # Delete all resources in the namespace before deleting PVCs
                         kubectl delete all --all --namespace=prod
                         sleep 10
+                        
+                        # Ensure all PVCs are deleted
                         kubectl delete pvc movie-db-pvc --namespace=prod --ignore-not-found
                         kubectl delete pvc cast-db-pvc --namespace=prod --ignore-not-found
+
+                        # Ensure all PVs are deleted
+                        kubectl delete pv pvc-c748c13d-627b-4ed5-9bac-89e32f5f035a --ignore-not-found
+                        kubectl delete pv pvc-ca75f5e8-5a4d-4d55-afd5-f686d44b0f17 --ignore-not-found
+
+                        # Wait until PVCs are actually deleted
+                        while kubectl get pvc movie-db-pvc --namespace=prod; do sleep 5; done
+                        while kubectl get pvc cast-db-pvc --namespace=prod; do sleep 5; done
                         
                         helm upgrade --install cast-db-prod helm-exam/ --values=helm-exam/values.yaml --namespace prod
                         helm upgrade --install movie-db-prod helm-exam/ --values=helm-exam/values.yaml --namespace prod
