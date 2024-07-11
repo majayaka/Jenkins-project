@@ -134,6 +134,11 @@ pipeline {
                                 kubectl annotate pvc movie-db-pvc meta.helm.sh/release-namespace=dev --overwrite
                             fi
 
+                            # Fix any conflicting PVC ownership annotations
+                            if kubectl get pvc movie-db-pvc --namespace=dev; then
+                                kubectl patch pvc movie-db-pvc --namespace=dev -p '{"metadata":{"annotations":{"meta.helm.sh/release-name":"movie-db-dev","meta.helm.sh/release-namespace":"dev"}}}'
+                            fi
+
                             # Deploy the Helm charts
                             helm upgrade --install cast-db-dev helm-exam/ --values=helm-exam/values.yaml --namespace dev
                             helm upgrade --install movie-db-dev helm-exam/ --values=helm-exam/values.yaml --namespace dev
