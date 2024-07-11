@@ -55,8 +55,8 @@ pipeline {
                         kubectl create namespace dev
                         kubectl config set-context --current --namespace=dev
                         
-                        helm upgrade --install cast-db-dev helm-exam/ --values=helm-exam/values.yml --namespace dev
-                        helm upgrade --install movie-db-dev helm-exam/ --values=helm-exam/values.yml --namespace dev
+                        helm upgrade --install cast-db-dev helm-exam/ --values=helm-exam/values.yaml --namespace dev
+                        helm upgrade --install movie-db-dev helm-exam/ --values=helm-exam/values.yaml --namespace dev
                         '''
                     }
                 }
@@ -80,8 +80,8 @@ pipeline {
                         kubectl create namespace qa
                         kubectl config set-context --current --namespace=qa
                         
-                        helm upgrade --install cast-db-qa helm-exam/ --values=helm-exam/values.yml --namespace qa
-                        helm upgrade --install movie-db-qa helm-exam/ --values=helm-exam/values.yml --namespace qa
+                        helm upgrade --install cast-db-qa helm-exam/ --values=helm-exam/values.yaml --namespace qa
+                        helm upgrade --install movie-db-qa helm-exam/ --values=helm-exam/values.yaml --namespace qa
                         '''
                     }
                 }
@@ -105,8 +105,8 @@ pipeline {
                         kubectl create namespace staging
                         kubectl config set-context --current --namespace=staging
                         
-                        helm upgrade --install cast-db-staging helm-exam/ --values=helm-exam/values.yml --namespace staging
-                        helm upgrade --install movie-db-staging helm-exam/ --values=helm-exam/values.yml --namespace staging
+                        helm upgrade --install cast-db-staging helm-exam/ --values=helm-exam/values.yaml --namespace staging
+                        helm upgrade --install movie-db-staging helm-exam/ --values=helm-exam/values.yaml --namespace staging
                         '''
                     }
                 }
@@ -136,8 +136,8 @@ pipeline {
                         kubectl create namespace prod
                         kubectl config set-context --current --namespace=prod
                         
-                        helm upgrade --install cast-db-prod helm-exam/ --values=helm-exam/values.yml --namespace prod
-                        helm upgrade --install movie-db-prod helm-exam/ --values=helm-exam/values.yml --namespace prod
+                        helm upgrade --install cast-db-prod helm-exam/ --values=helm-exam/values.yaml --namespace prod
+                        helm upgrade --install movie-db-prod helm-exam/ --values=helm-exam/values.yaml --namespace prod
                         '''
                     }
                 }
