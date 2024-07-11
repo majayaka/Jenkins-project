@@ -25,9 +25,12 @@ pipeline {
             steps {
                 script {
                     sh '''
+                        # Remove any existing containers with the same name
                         docker rm -f jenkins-cast jenkins-movie || true
-                        docker build -t $DOCKER_ID/$DOCKER_IMAGE_CAST:$DOCKER_TAG ./path/to/cast-service
-                        docker build -t $DOCKER_ID/$DOCKER_IMAGE_MOVIE:$DOCKER_TAG ./path/to/movie-service
+
+                        # Build Docker images
+                        docker build -t $DOCKER_ID/$DOCKER_IMAGE_CAST:$DOCKER_TAG ./cast-service
+                        docker build -t $DOCKER_ID/$DOCKER_IMAGE_MOVIE:$DOCKER_TAG ./movie-service
                         sleep 6
                     '''
                 }
@@ -37,6 +40,7 @@ pipeline {
             steps {
                 script {
                     sh '''
+                        # Run Docker containers
                         docker run -d -p 8002:8000 --name jenkins-cast $DOCKER_ID/$DOCKER_IMAGE_CAST:$DOCKER_TAG
                         docker run -d -p 8001:8000 --name jenkins-movie $DOCKER_ID/$DOCKER_IMAGE_MOVIE:$DOCKER_TAG
                         sleep 10
