@@ -51,35 +51,28 @@ pipeline {
                         # Configure env
                         export KUBECONFIG=/tmp/kubeconfig
                         
+                        # Ensure the namespace is clean
                         kubectl delete namespace dev --ignore-not-found
                         kubectl create namespace dev
                         kubectl config set-context --current --namespace=dev
                         
-                        # Delete all resources in the namespace before deleting PVCs
+                        # Delete all resources in the namespace
                         kubectl delete all --all --namespace=dev
                         sleep 10
                         
-                        # Ensure all PVCs are deleted
-                        kubectl patch pvc movie-db-pvc --namespace=dev -p '{"metadata":{"finalizers":null}}' || true
-                        kubectl patch pvc cast-db-pvc --namespace=dev -p '{"metadata":{"finalizers":null}}' || true
+                        # Ensure all PVCs and PVs are deleted
                         kubectl delete pvc movie-db-pvc --namespace=dev --ignore-not-found
                         kubectl delete pvc cast-db-pvc --namespace=dev --ignore-not-found
                         
-                        # Patch PVs to remove finalizers and force delete them
-                        kubectl patch pv pvc-c748c13d-627b-4ed5-9bac-89e32f5f035a -p '{"metadata":{"finalizers":null}}' || true
-                        kubectl patch pv pvc-ca75f5e8-5a4d-4d55-afd5-f686d44b0f17 -p '{"metadata":{"finalizers":null}}' || true
-                        
-                        # Ensure all PVs are deleted
-                        kubectl delete pv pvc-c748c13d-627b-4ed5-9bac-89e32f5f035a --ignore-not-found
-                        kubectl delete pv pvc-ca75f5e8-5a4d-4d55-afd5-f686d44b0f17 --ignore-not-found
-
-                        # Wait until PVCs are actually deleted
                         while kubectl get pvc movie-db-pvc --namespace=dev; do sleep 5; done
                         while kubectl get pvc cast-db-pvc --namespace=dev; do sleep 5; done
 
                         # Ensure PVs are deleted
-                        while kubectl get pv pvc-c748c13d-627b-4ed5-9bac-89e32f5f035a; do sleep 5; done
-                        while kubectl get pv pvc-ca75f5e8-5a4d-4d55-afd5-f686d44b0f17; do sleep 5; done
+                        kubectl patch pv $(kubectl get pv -o jsonpath='{.items[?(@.spec.claimRef.name=="movie-db-pvc")].metadata.name}') -p '{"metadata":{"finalizers":null}}' || true
+                        kubectl patch pv $(kubectl get pv -o jsonpath='{.items[?(@.spec.claimRef.name=="cast-db-pvc")].metadata.name}') -p '{"metadata":{"finalizers":null}}' || true
+
+                        while kubectl get pv -o jsonpath='{.items[?(@.spec.claimRef.name=="movie-db-pvc")].metadata.name}'; do sleep 5; done
+                        while kubectl get pv -o jsonpath='{.items[?(@.spec.claimRef.name=="cast-db-pvc")].metadata.name}'; do sleep 5; done
                         
                         helm upgrade --install cast-db-dev helm-exam/ --values=helm-exam/values.yaml --namespace dev
                         helm upgrade --install movie-db-dev helm-exam/ --values=helm-exam/values.yaml --namespace dev
@@ -102,35 +95,28 @@ pipeline {
                         # Configure env
                         export KUBECONFIG=/tmp/kubeconfig
                         
+                        # Ensure the namespace is clean
                         kubectl delete namespace qa --ignore-not-found
                         kubectl create namespace qa
                         kubectl config set-context --current --namespace=qa
                         
-                        # Delete all resources in the namespace before deleting PVCs
+                        # Delete all resources in the namespace
                         kubectl delete all --all --namespace=qa
                         sleep 10
                         
-                        # Ensure all PVCs are deleted
-                        kubectl patch pvc movie-db-pvc --namespace=qa -p '{"metadata":{"finalizers":null}}' || true
-                        kubectl patch pvc cast-db-pvc --namespace=qa -p '{"metadata":{"finalizers":null}}' || true
+                        # Ensure all PVCs and PVs are deleted
                         kubectl delete pvc movie-db-pvc --namespace=qa --ignore-not-found
                         kubectl delete pvc cast-db-pvc --namespace=qa --ignore-not-found
                         
-                        # Patch PVs to remove finalizers and force delete them
-                        kubectl patch pv pvc-c748c13d-627b-4ed5-9bac-89e32f5f035a -p '{"metadata":{"finalizers":null}}' || true
-                        kubectl patch pv pvc-ca75f5e8-5a4d-4d55-afd5-f686d44b0f17 -p '{"metadata":{"finalizers":null}}' || true
-
-                        # Ensure all PVs are deleted
-                        kubectl delete pv pvc-c748c13d-627b-4ed5-9bac-89e32f5f035a --ignore-not-found
-                        kubectl delete pv pvc-ca75f5e8-5a4d-4d55-afd5-f686d44b0f17 --ignore-not-found
-
-                        # Wait until PVCs are actually deleted
                         while kubectl get pvc movie-db-pvc --namespace=qa; do sleep 5; done
                         while kubectl get pvc cast-db-pvc --namespace=qa; do sleep 5; done
 
                         # Ensure PVs are deleted
-                        while kubectl get pv pvc-c748c13d-627b-4ed5-9bac-89e32f5f035a; do sleep 5; done
-                        while kubectl get pv pvc-ca75f5e8-5a4d-4d55-afd5-f686d44b0f17; do sleep 5; done
+                        kubectl patch pv $(kubectl get pv -o jsonpath='{.items[?(@.spec.claimRef.name=="movie-db-pvc")].metadata.name}') -p '{"metadata":{"finalizers":null}}' || true
+                        kubectl patch pv $(kubectl get pv -o jsonpath='{.items[?(@.spec.claimRef.name=="cast-db-pvc")].metadata.name}') -p '{"metadata":{"finalizers":null}}' || true
+
+                        while kubectl get pv -o jsonpath='{.items[?(@.spec.claimRef.name=="movie-db-pvc")].metadata.name}'; do sleep 5; done
+                        while kubectl get pv -o jsonpath='{.items[?(@.spec.claimRef.name=="cast-db-pvc")].metadata.name}'; do sleep 5; done
                         
                         helm upgrade --install cast-db-qa helm-exam/ --values=helm-exam/values.yaml --namespace qa
                         helm upgrade --install movie-db-qa helm-exam/ --values=helm-exam/values.yaml --namespace qa
@@ -153,35 +139,28 @@ pipeline {
                         # Configure env
                         export KUBECONFIG=/tmp/kubeconfig
                         
+                        # Ensure the namespace is clean
                         kubectl delete namespace staging --ignore-not-found
                         kubectl create namespace staging
                         kubectl config set-context --current --namespace=staging
                         
-                        # Delete all resources in the namespace before deleting PVCs
+                        # Delete all resources in the namespace
                         kubectl delete all --all --namespace=staging
                         sleep 10
                         
-                        # Ensure all PVCs are deleted
-                        kubectl patch pvc movie-db-pvc --namespace=staging -p '{"metadata":{"finalizers":null}}' || true
-                        kubectl patch pvc cast-db-pvc --namespace=staging -p '{"metadata":{"finalizers":null}}' || true
+                        # Ensure all PVCs and PVs are deleted
                         kubectl delete pvc movie-db-pvc --namespace=staging --ignore-not-found
                         kubectl delete pvc cast-db-pvc --namespace=staging --ignore-not-found
                         
-                        # Patch PVs to remove finalizers and force delete them
-                        kubectl patch pv pvc-c748c13d-627b-4ed5-9bac-89e32f5f035a -p '{"metadata":{"finalizers":null}}' || true
-                        kubectl patch pv pvc-ca75f5e8-5a4d-4d55-afd5-f686d44b0f17 -p '{"metadata":{"finalizers":null}}' || true
-
-                        # Ensure all PVs are deleted
-                        kubectl delete pv pvc-c748c13d-627b-4ed5-9bac-89e32f5f035a --ignore-not-found
-                        kubectl delete pv pvc-ca75f5e8-5a4d-4d55-afd5-f686d44b0f17 --ignore-not-found
-
-                        # Wait until PVCs are actually deleted
                         while kubectl get pvc movie-db-pvc --namespace=staging; do sleep 5; done
                         while kubectl get pvc cast-db-pvc --namespace=staging; do sleep 5; done
 
                         # Ensure PVs are deleted
-                        while kubectl get pv pvc-c748c13d-627b-4ed5-9bac-89e32f5f035a; do sleep 5; done
-                        while kubectl get pv pvc-ca75f5e8-5a4d-4d55-afd5-f686d44b0f17; do sleep 5; done
+                        kubectl patch pv $(kubectl get pv -o jsonpath='{.items[?(@.spec.claimRef.name=="movie-db-pvc")].metadata.name}') -p '{"metadata":{"finalizers":null}}' || true
+                        kubectl patch pv $(kubectl get pv -o jsonpath='{.items[?(@.spec.claimRef.name=="cast-db-pvc")].metadata.name}') -p '{"metadata":{"finalizers":null}}' || true
+
+                        while kubectl get pv -o jsonpath='{.items[?(@.spec.claimRef.name=="movie-db-pvc")].metadata.name}'; do sleep 5; done
+                        while kubectl get pv -o jsonpath='{.items[?(@.spec.claimRef.name=="cast-db-pvc")].metadata.name}'; do sleep 5; done
                         
                         helm upgrade --install cast-db-staging helm-exam/ --values=helm-exam/values.yaml --namespace staging
                         helm upgrade --install movie-db-staging helm-exam/ --values=helm-exam/values.yaml --namespace staging
@@ -210,35 +189,28 @@ pipeline {
                         # Configure env
                         export KUBECONFIG=/tmp/kubeconfig
                         
+                        # Ensure the namespace is clean
                         kubectl delete namespace prod --ignore-not-found
                         kubectl create namespace prod
                         kubectl config set-context --current --namespace=prod
                         
-                        # Delete all resources in the namespace before deleting PVCs
+                        # Delete all resources in the namespace
                         kubectl delete all --all --namespace=prod
                         sleep 10
                         
-                        # Ensure all PVCs are deleted
-                        kubectl patch pvc movie-db-pvc --namespace=prod -p '{"metadata":{"finalizers":null}}' || true
-                        kubectl patch pvc cast-db-pvc --namespace=prod -p '{"metadata":{"finalizers":null}}' || true
+                        # Ensure all PVCs and PVs are deleted
                         kubectl delete pvc movie-db-pvc --namespace=prod --ignore-not-found
                         kubectl delete pvc cast-db-pvc --namespace=prod --ignore-not-found
                         
-                        # Patch PVs to remove finalizers and force delete them
-                        kubectl patch pv pvc-c748c13d-627b-4ed5-9bac-89e32f5f035a -p '{"metadata":{"finalizers":null}}' || true
-                        kubectl patch pv pvc-ca75f5e8-5a4d-4d55-afd5-f686d44b0f17 -p '{"metadata":{"finalizers":null}}' || true
-
-                        # Ensure all PVs are deleted
-                        kubectl delete pv pvc-c748c13d-627b-4ed5-9bac-89e32f5f035a --ignore-not-found
-                        kubectl delete pv pvc-ca75f5e8-5a4d-4d55-afd5-f686d44b0f17 --ignore-not-found
-
-                        # Wait until PVCs are actually deleted
                         while kubectl get pvc movie-db-pvc --namespace=prod; do sleep 5; done
                         while kubectl get pvc cast-db-pvc --namespace=prod; do sleep 5; done
 
                         # Ensure PVs are deleted
-                        while kubectl get pv pvc-c748c13d-627b-4ed5-9bac-89e32f5f035a; do sleep 5; done
-                        while kubectl get pv pvc-ca75f5e8-5a4d-4d55-afd5-f686d44b0f17; do sleep 5; done
+                        kubectl patch pv $(kubectl get pv -o jsonpath='{.items[?(@.spec.claimRef.name=="movie-db-pvc")].metadata.name}') -p '{"metadata":{"finalizers":null}}' || true
+                        kubectl patch pv $(kubectl get pv -o jsonpath='{.items[?(@.spec.claimRef.name=="cast-db-pvc")].metadata.name}') -p '{"metadata":{"finalizers":null}}' || true
+
+                        while kubectl get pv -o jsonpath='{.items[?(@.spec.claimRef.name=="movie-db-pvc")].metadata.name}'; do sleep 5; done
+                        while kubectl get pv -o jsonpath='{.items[?(@.spec.claimRef.name=="cast-db-pvc")].metadata.name}'; do sleep 5; done
                         
                         helm upgrade --install cast-db-prod helm-exam/ --values=helm-exam/values.yaml --namespace prod
                         helm upgrade --install movie-db-prod helm-exam/ --values=helm-exam/values.yaml --namespace prod
