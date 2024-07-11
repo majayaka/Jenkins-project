@@ -1,14 +1,15 @@
-# templates/movie-service-service.yaml
 apiVersion: v1
 kind: Service
 metadata:
   name: {{ include "helm-exam.fullname" . }}-movie-service
+  labels:
+    {{- include "helm-exam.labels" . | nindent 4 }}
 spec:
-  type: NodePort
+  type: {{ .Values.service.type }}
   ports:
     - port: {{ .Values.movieService.servicePort }}
       targetPort: {{ .Values.movieService.containerPort }}
-      nodePort: {{ .Values.movieService.nodePort | default 30001 }}
   selector:
-    app: {{ include "helm-exam.name" . }}
-    component: movie-service
+    app.kubernetes.io/name: {{ include "helm-exam.name" . }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/component: movie

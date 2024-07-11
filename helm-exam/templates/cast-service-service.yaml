@@ -1,14 +1,15 @@
-# templates/cast-service-service.yaml
 apiVersion: v1
 kind: Service
 metadata:
   name: {{ include "helm-exam.fullname" . }}-cast-service
+  labels:
+    {{- include "helm-exam.labels" . | nindent 4 }}
 spec:
-  type: NodePort
+  type: {{ .Values.service.type }}
   ports:
     - port: {{ .Values.castService.servicePort }}
       targetPort: {{ .Values.castService.containerPort }}
-      nodePort: {{ .Values.castService.nodePort | default 30002 }}
   selector:
-    app: {{ include "helm-exam.name" . }}
-    component: cast-service
+    app.kubernetes.io/name: {{ include "helm-exam.name" . }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/component: cast
