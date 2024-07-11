@@ -17,6 +17,7 @@ pipeline {
                 script {
                     def branch = env.GIT_BRANCH ?: 'master'
                     echo "Current branch is: ${branch}"
+                    checkout scm
                 }
             }
         }
