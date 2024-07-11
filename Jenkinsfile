@@ -24,27 +24,23 @@ pipeline {
         stage('Docker Build') { 
             steps {
                 script {
-                    sh '''
-                        # Remove any existing containers with the same name
-                        docker rm -f jenkins-cast jenkins-movie || true
-
-                        # Build Docker images
-                        docker build -t $DOCKER_ID/$DOCKER_IMAGE_CAST:$DOCKER_TAG ./cast-service
-                        docker build -t $DOCKER_ID/$DOCKER_IMAGE_MOVIE:$DOCKER_TAG ./movie-service
-                        sleep 6
-                    '''
+                sh '''
+                 docker rm -f jenkins-cast jenkins-movie || true
+                 docker build -t $DOCKER_ID/$DOCKER_IMAGE_CAST:$DOCKER_TAG ./cast-service
+                 docker build -t $DOCKER_ID/$DOCKER_IMAGE_MOVIE:$DOCKER_TAG ./movie-service
+                 sleep 6
+                '''
                 }
             }
         }
         stage('Docker Run Images') {
             steps {
                 script {
-                    sh '''
-                        # Run Docker containers
-                        docker run -d -p 8002:8000 --name jenkins-cast $DOCKER_ID/$DOCKER_IMAGE_CAST:$DOCKER_TAG
-                        docker run -d -p 8001:8000 --name jenkins-movie $DOCKER_ID/$DOCKER_IMAGE_MOVIE:$DOCKER_TAG
-                        sleep 10
-                    '''
+                sh '''
+                    docker run -d -p 8002:8000 --name jenkins-cast $DOCKER_ID/$DOCKER_IMAGE_CAST:$DOCKER_TAG
+                    docker run -d -p 8001:8000 --name jenkins-movie $DOCKER_ID/$DOCKER_IMAGE_MOVIE:$DOCKER_TAG
+                    sleep 10
+                '''
                 }
             }
         }
@@ -53,19 +49,19 @@ pipeline {
             steps {
                 script {
                     sh '''
-                        # Test if cast-service is running
-                        if ! docker ps -a | grep -q jenkins-cast; then
-                            echo "Cast service container failed to start."
-                            exit 1
-                        fi
+                     # Test if cast-service is running
+                     if ! docker ps -a | grep -q jenkins-cast; then
+                        echo "Cast service container failed to start."
+                        exit 1
+                     fi
 
-                        # Test if movie-service is running
-                        if ! docker ps -a | grep -q jenkins-movie; then
-                            echo "Movie service container failed to start."
-                            exit 1
-                        fi
+                     # Test if movie-service is running
+                     if ! docker ps -a | grep -q jenkins-movie; then
+                        echo "Movie service container failed to start."
+                        exit 1
+                     fi
 
-                        echo "Both containers are running successfully."
+                     echo "Both containers are running successfully."
                     '''
                 }
             }
@@ -74,11 +70,11 @@ pipeline {
             steps {
                 script {
                     sh '''
-                        docker login -u $DOCKER_ID -p $DOCKER_PASS
-                        docker push $DOCKER_ID/$DOCKER_IMAGE_CAST:$DOCKER_TAG
-                        docker push $DOCKER_ID/$DOCKER_IMAGE_CAST:latest
-                        docker push $DOCKER_ID/$DOCKER_IMAGE_MOVIE:$DOCKER_TAG
-                        docker push $DOCKER_ID/$DOCKER_IMAGE_MOVIE:latest
+                     docker login -u $DOCKER_ID -p $DOCKER_PASS
+                     docker push $DOCKER_ID/$DOCKER_IMAGE_CAST:$DOCKER_TAG
+                     docker push $DOCKER_ID/$DOCKER_IMAGE_CAST:latest
+                     docker push $DOCKER_ID/$DOCKER_IMAGE_MOVIE:$DOCKER_TAG
+                     docker push $DOCKER_ID/$DOCKER_IMAGE_MOVIE:latest
                     '''
                 }
             }
