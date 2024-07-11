@@ -142,7 +142,198 @@ pipeline {
                 }
             }
         }
-        // Similar stages for QA, staging, and prod with appropriate namespace changes
+        stage('Deployment in QA') {
+            steps {
+                withCredentials([file(credentialsId: 'kubeconfig-file', variable: 'KUBECONFIG')]) {
+                    script {
+                        sh '''
+                            # Copy kubeconfig file
+                            cp $KUBECONFIG /tmp/kubeconfig
+                            
+                            # Configure the auth of file
+                            chmod 600 /tmp/kubeconfig
+                            
+                            # Configure env
+                            export KUBECONFIG=/tmp/kubeconfig
+                            
+                            # Ensure the namespace is clean
+                            kubectl delete namespace qa --ignore-not-found
+                            kubectl create namespace qa
+                            kubectl config set-context --current --namespace=qa
+                            
+                            # Delete all resources in the namespace
+                            kubectl delete all --all --namespace=qa || true
+                            sleep 10
+                            
+                            # Ensure all PVCs are deleted or patched
+                            if kubectl get pvc movie-db-pvc --namespace=qa; then
+                                kubectl patch pvc movie-db-pvc --namespace=qa -p '{"metadata":{"finalizers":null}}' || true
+                                kubectl delete pvc movie-db-pvc --namespace=qa --ignore-not-found || true
+                            fi
+                            
+                            if kubectl get pvc cast-db-pvc --namespace=qa; then
+                                kubectl patch pvc cast-db-pvc --namespace=qa -p '{"metadata":{"finalizers":null}}' || true
+                                kubectl delete pvc cast-db-pvc --namespace=qa --ignore-not-found || true
+                            fi
+
+                            # Confirm PVCs are deleted
+                            kubectl get pvc --namespace=qa
+
+                            # Get PV names and delete them
+                            pv_names=$(kubectl get pv -o jsonpath='{.items[?(@.spec.claimRef.namespace=="qa")].metadata.name}')
+                            if [ -n "$pv_names" ]; then
+                                for pv in $pv_names; do
+                                    kubectl patch pv $pv -p '{"metadata":{"finalizers":null}}' || true
+                                    kubectl delete pv $pv --ignore-not-found || true
+                                done
+                            else
+                                echo "No PVs found for namespace qa."
+                            fi
+
+                            # Fix PVC metadata if it exists
+                            if kubectl get pvc movie-db-pvc --namespace=qa; then
+                                kubectl annotate pvc movie-db-pvc meta.helm.sh/release-name=movie-db-qa --overwrite
+                                kubectl annotate pvc movie-db-pvc meta.helm.sh/release-namespace=qa --overwrite
+                            fi
+
+                            # Deploy the Helm charts
+                            helm upgrade --install cast-db-qa helm-exam/ --values=helm-exam/values.yaml --namespace qa
+                            helm upgrade --install movie-db-qa helm-exam/ --values=helm-exam/values.yaml --namespace qa
+                        '''
+                    }
+                }
+            }
+        }
+        stage('Deployment in staging') {
+            steps {
+                withCredentials([file(credentialsId: 'kubeconfig-file', variable: 'KUBECONFIG')]) {
+                    script {
+                        sh '''
+                            # Copy kubeconfig file
+                            cp $KUBECONFIG /tmp/kubeconfig
+                            
+                            # Configure the auth of file
+                            chmod 600 /tmp/kubeconfig
+                            
+                            # Configure env
+                            export KUBECONFIG=/tmp/kubeconfig
+                            
+                            # Ensure the namespace is clean
+                            kubectl delete namespace staging --ignore-not-found
+                            kubectl create namespace staging
+                            kubectl config set-context --current --namespace=staging
+                            
+                            # Delete all resources in the namespace
+                            kubectl delete all --all --namespace=staging || true
+                            sleep 10
+                            
+                            # Ensure all PVCs are deleted or patched
+                            if kubectl get pvc movie-db-pvc --namespace=staging; then
+                                kubectl patch pvc movie-db-pvc --namespace=staging -p '{"metadata":{"finalizers":null}}' || true
+                                kubectl delete pvc movie-db-pvc --namespace=staging --ignore-not-found || true
+                            fi
+                            
+                            if kubectl get pvc cast-db-pvc --namespace=staging; then
+                                kubectl patch pvc cast-db-pvc --namespace=staging -p '{"metadata":{"finalizers":null}}' || true
+                                kubectl delete pvc cast-db-pvc --namespace=staging --ignore-not-found || true
+                            fi
+
+                            # Confirm PVCs are deleted
+                            kubectl get pvc --namespace=staging
+
+                            # Get PV names and delete them
+                            pv_names=$(kubectl get pv -o jsonpath='{.items[?(@.spec.claimRef.namespace=="staging")].metadata.name}')
+                            if [ -n "$pv_names" ]; then
+                                for pv in $pv_names; do
+                                    kubectl patch pv $pv -p '{"metadata":{"finalizers":null}}' || true
+                                    kubectl delete pv $pv --ignore-not-found || true
+                                done
+                            else
+                                echo "No PVs found for namespace staging."
+                            fi
+
+                            # Fix PVC metadata if it exists
+                            if kubectl get pvc movie-db-pvc --namespace=staging; then
+                                kubectl annotate pvc movie-db-pvc meta.helm.sh/release-name=movie-db-staging --overwrite
+                                kubectl annotate pvc movie-db-pvc meta.helm.sh/release-namespace=staging --overwrite
+                            fi
+
+                            # Deploy the Helm charts
+                            helm upgrade --install cast-db-staging helm-exam/ --values=helm-exam/values.yaml --namespace staging
+                            helm upgrade --install movie-db-staging helm-exam/ --values=helm-exam/values.yaml --namespace staging
+                        '''
+                    }
+                }
+            }
+        }
+        stage('Deployment in prod') {
+            when {
+                branch 'master'
+            }
+            steps {
+                timeout(time: 15, unit: 'MINUTES') {
+                    input message: 'Do you want to deploy to production?', ok: 'Yes'
+                }
+                withCredentials([file(credentialsId: 'kubeconfig-file', variable: 'KUBECONFIG')]) {
+                    script {
+                        sh '''
+                            # Copy kubeconfig file
+                            cp $KUBECONFIG /tmp/kubeconfig
+                            
+                            # Configure the auth of file
+                            chmod 600 /tmp/kubeconfig
+                            
+                            # Configure env
+                            export KUBECONFIG=/tmp/kubeconfig
+                            
+                            # Ensure the namespace is clean
+                            kubectl delete namespace prod --ignore-not-found
+                            kubectl create namespace prod
+                            kubectl config set-context --current --namespace=prod
+                            
+                            # Delete all resources in the namespace
+                            kubectl delete all --all --namespace=prod || true
+                            sleep 10
+                            
+                            # Ensure all PVCs are deleted or patched
+                            if kubectl get pvc movie-db-pvc --namespace=prod; then
+                                kubectl patch pvc movie-db-pvc --namespace=prod -p '{"metadata":{"finalizers":null}}' || true
+                                kubectl delete pvc movie-db-pvc --namespace=prod --ignore-not-found || true
+                            fi
+                            
+                            if kubectl get pvc cast-db-pvc --namespace=prod; then
+                                kubectl patch pvc cast-db-pvc --namespace=prod -p '{"metadata":{"finalizers":null}}' || true
+                                kubectl delete pvc cast-db-pvc --namespace=prod --ignore-not-found || true
+                            fi
+
+                            # Confirm PVCs are deleted
+                            kubectl get pvc --namespace=prod
+
+                            # Get PV names and delete them
+                            pv_names=$(kubectl get pv -o jsonpath='{.items[?(@.spec.claimRef.namespace=="prod")].metadata.name}')
+                            if [ -n "$pv_names" ]; then
+                                for pv in $pv_names; do
+                                    kubectl patch pv $pv -p '{"metadata":{"finalizers":null}}' || true
+                                    kubectl delete pv $pv --ignore-not-found || true
+                                done
+                            else
+                                echo "No PVs found for namespace prod."
+                            fi
+
+                            # Fix PVC metadata if it exists
+                            if kubectl get pvc movie-db-pvc --namespace=prod; then
+                                kubectl annotate pvc movie-db-pvc meta.helm.sh/release-name=movie-db-prod --overwrite
+                                kubectl annotate pvc movie-db-pvc meta.helm.sh/release-namespace=prod --overwrite
+                            fi
+
+                            # Deploy the Helm charts
+                            helm upgrade --install cast-db-prod helm-exam/ --values=helm-exam/values.yaml --namespace prod
+                            helm upgrade --install movie-db-prod helm-exam/ --values=helm-exam/values.yaml --namespace prod
+                        '''
+                    }
+                }
+            }
+        }
     }
     post {
         always {
