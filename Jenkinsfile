@@ -51,15 +51,12 @@ pipeline {
                         # Configure env
                         export KUBECONFIG=/tmp/kubeconfig
                         
-                        # Debug: Check if the values file exists
-                        ls -l helm-exam/values-dev.yml
-                        
                         kubectl delete namespace dev --ignore-not-found
                         kubectl create namespace dev
                         kubectl config set-context --current --namespace=dev
                         
-                        helm upgrade --install cast-db-dev helm-exam/ --values=helm-exam/values-dev.yml --namespace dev
-                        helm upgrade --install movie-db-dev helm-exam/ --values=helm-exam/values-dev.yml --namespace dev
+                        helm upgrade --install cast-db-dev helm-exam/ --values=helm-exam/values.yml --namespace dev
+                        helm upgrade --install movie-db-dev helm-exam/ --values=helm-exam/values.yml --namespace dev
                         '''
                     }
                 }
@@ -79,15 +76,12 @@ pipeline {
                         # Configure env
                         export KUBECONFIG=/tmp/kubeconfig
                         
-                        # Debug: Check if the values file exists
-                        ls -l helm-exam/values-qa.yml
-                        
                         kubectl delete namespace qa --ignore-not-found
                         kubectl create namespace qa
                         kubectl config set-context --current --namespace=qa
                         
-                        helm upgrade --install cast-db-qa helm-exam/ --values=helm-exam/values-qa.yml --namespace qa
-                        helm upgrade --install movie-db-qa helm-exam/ --values=helm-exam/values-qa.yml --namespace qa
+                        helm upgrade --install cast-db-qa helm-exam/ --values=helm-exam/values.yml --namespace qa
+                        helm upgrade --install movie-db-qa helm-exam/ --values=helm-exam/values.yml --namespace qa
                         '''
                     }
                 }
@@ -107,15 +101,12 @@ pipeline {
                         # Configure env
                         export KUBECONFIG=/tmp/kubeconfig
                         
-                        # Debug: Check if the values file exists
-                        ls -l helm-exam/values-staging.yml
-                        
                         kubectl delete namespace staging --ignore-not-found
                         kubectl create namespace staging
                         kubectl config set-context --current --namespace=staging
                         
-                        helm upgrade --install cast-db-staging helm-exam/ --values=helm-exam/values-staging.yml --namespace staging
-                        helm upgrade --install movie-db-staging helm-exam/ --values=helm-exam/values-staging.yml --namespace staging
+                        helm upgrade --install cast-db-staging helm-exam/ --values=helm-exam/values.yml --namespace staging
+                        helm upgrade --install movie-db-staging helm-exam/ --values=helm-exam/values.yml --namespace staging
                         '''
                     }
                 }
@@ -141,15 +132,12 @@ pipeline {
                         # Configure env
                         export KUBECONFIG=/tmp/kubeconfig
                         
-                        # Debug: Check if the values file exists
-                        ls -l helm-exam/values-prod.yml
-                        
                         kubectl delete namespace prod --ignore-not-found
                         kubectl create namespace prod
                         kubectl config set-context --current --namespace=prod
                         
-                        helm upgrade --install cast-db-prod helm-exam/ --values=helm-exam/values-prod.yml --namespace prod
-                        helm upgrade --install movie-db-prod helm-exam/ --values=helm-exam/values-prod.yml --namespace prod
+                        helm upgrade --install cast-db-prod helm-exam/ --values=helm-exam/values.yml --namespace prod
+                        helm upgrade --install movie-db-prod helm-exam/ --values=helm-exam/values.yml --namespace prod
                         '''
                     }
                 }
