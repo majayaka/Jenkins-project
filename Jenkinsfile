@@ -37,8 +37,10 @@ pipeline {
             steps {
                 script {
                     sh '''
-                     docker run -d -p 8002:8000 --name jenkins-cast $DOCKER_ID/$DOCKER_IMAGE_CAST:latest
-                     docker run -d -p 8001:8000 --name jenkins-movie $DOCKER_ID/$DOCKER_IMAGE_MOVIE:latest
+                    docker rm -f jenkins-cast || true
+                    docker rm -f jenkins-movie || true
+                    docker run -d -p 8002:8000 --name jenkins-cast $DOCKER_ID/$DOCKER_IMAGE_CAST:latest
+                    docker run -d -p 8001:8000 --name jenkins-movie $DOCKER_ID/$DOCKER_IMAGE_MOVIE:latest
                     '''
                 }
             }
