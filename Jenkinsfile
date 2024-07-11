@@ -157,7 +157,4 @@ pipeline {
         failure {
             mail to: 'yumotoayaka@gmail.com',
                  subject: "FAILURE: Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]'",
-                 body: "Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]' failed."
-        }
-    }
-}
+                
