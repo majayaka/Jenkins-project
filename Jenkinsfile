@@ -103,7 +103,9 @@ pipeline {
                         sleep 10
                         
                         # Ensure all PVCs are deleted
+                        kubectl patch pvc movie-db-pvc --namespace=dev -p '{"metadata":{"finalizers":null}}' || true
                         kubectl delete pvc movie-db-pvc --namespace=dev --ignore-not-found || true
+                        kubectl patch pvc cast-db-pvc --namespace=dev -p '{"metadata":{"finalizers":null}}' || true
                         kubectl delete pvc cast-db-pvc --namespace=dev --ignore-not-found || true
 
                         # Confirm PVCs are deleted
@@ -152,7 +154,9 @@ pipeline {
                         sleep 10
                         
                         # Ensure all PVCs are deleted
+                        kubectl patch pvc movie-db-pvc --namespace=qa -p '{"metadata":{"finalizers":null}}' || true
                         kubectl delete pvc movie-db-pvc --namespace=qa --ignore-not-found || true
+                        kubectl patch pvc cast-db-pvc --namespace=qa -p '{"metadata":{"finalizers":null}}' || true
                         kubectl delete pvc cast-db-pvc --namespace=qa --ignore-not-found || true
 
                         # Confirm PVCs are deleted
@@ -201,7 +205,9 @@ pipeline {
                         sleep 10
                         
                         # Ensure all PVCs are deleted
+                        kubectl patch pvc movie-db-pvc --namespace=staging -p '{"metadata":{"finalizers":null}}' || true
                         kubectl delete pvc movie-db-pvc --namespace=staging --ignore-not-found || true
+                        kubectl patch pvc cast-db-pvc --namespace=staging -p '{"metadata":{"finalizers":null}}' || true
                         kubectl delete pvc cast-db-pvc --namespace=staging --ignore-not-found || true
 
                         # Confirm PVCs are deleted
@@ -256,7 +262,9 @@ pipeline {
                         sleep 10
                         
                         # Ensure all PVCs are deleted
+                        kubectl patch pvc movie-db-pvc --namespace=prod -p '{"metadata":{"finalizers":null}}' || true
                         kubectl delete pvc movie-db-pvc --namespace=prod --ignore-not-found || true
+                        kubectl patch pvc cast-db-pvc --namespace=prod -p '{"metadata":{"finalizers":null}}' || true
                         kubectl delete pvc cast-db-pvc --namespace=prod --ignore-not-found || true
 
                         # Confirm PVCs are deleted
