@@ -186,7 +186,7 @@ pipeline {
 
                             # Get PV names and delete them
                             pv_names=$(kubectl get pv -o jsonpath='{.items[?(@.spec.claimRef.namespace=="qa")].metadata.name}')
-                            if [ -n "$pv_names"; then
+                            if [ -n "$pv_names" ]; then
                                 for pv in $pv_names; do
                                     kubectl patch pv $pv -p '{"metadata":{"finalizers":null}}' || true
                                     kubectl delete pv $pv --ignore-not-found || true
@@ -248,7 +248,7 @@ pipeline {
 
                             # Get PV names and delete them
                             pv_names=$(kubectl get pv -o jsonpath='{.items[?(@.spec.claimRef.namespace=="staging")].metadata.name}')
-                            if [ -n "$pv_names"; then
+                            if [ -n "$pv_names" ]; then
                                 for pv in $pv_names; do
                                     kubectl patch pv $pv -p '{"metadata":{"finalizers":null}}' || true
                                     kubectl delete pv $pv --ignore-not-found || true
@@ -316,7 +316,7 @@ pipeline {
 
                             # Get PV names and delete them
                             pv_names=$(kubectl get pv -o jsonpath='{.items[?(@.spec.claimRef.namespace=="prod")].metadata.name}')
-                            if [ -n "$pv_names"; then
+                            if [ -n "$pv_names" ]; then
                                 for pv in $pv_names; do
                                     kubectl patch pv $pv -p '{"metadata":{"finalizers":null}}' || true
                                     kubectl delete pv $pv --ignore-not-found || true
