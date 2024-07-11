@@ -8,14 +8,19 @@ pipeline {
     }
     agent any
     stages {
+        stage('Checkout') {
+            steps {
+                checkout scm
+            }
+        }
         stage('Docker Build') { 
             steps {
                 script {
                     sh '''
-                    docker rmi -f ayakayu/cast-service || true
-                    docker rmi -f ayakayu/movie-service || true
-                    docker build -t ayakayu/cast-service ./cast-service
-                    docker build -t ayakayu/movie-service ./movie-service
+                    docker rmi -f $DOCKER_ID/$DOCKER_IMAGE_CAST:$DOCKER_TAG || true
+                    docker rmi -f $DOCKER_ID/$DOCKER_IMAGE_MOVIE:$DOCKER_TAG || true
+                    docker build -t $DOCKER_ID/$DOCKER_IMAGE_CAST:$DOCKER_TAG ./cast-service
+                    docker build -t $DOCKER_ID/$DOCKER_IMAGE_MOVIE:$DOCKER_TAG ./movie-service
                     sleep 6
                     '''
                 }
@@ -37,68 +42,11 @@ pipeline {
                 withCredentials([file(credentialsId: 'kubeconfig-file', variable: 'KUBECONFIG')]) {
                     script {
                         sh '''
-                        rm -Rf .kube
-                        mkdir .kube
-                        cp $KUBECONFIG .kube/config
-                        cp helm-exam/values.yml
-                        cat values.yml
-                        helm upgrade --install cast-db-dev helm-exam/ --values=values.yml --namespace dev
-                        
-                        cp helm-exam/values.yml
-                        cat values.yml
-                        helm upgrade --install movie-db-dev helm-exam/ --values=values.yml --namespace dev
-                        '''
-                    }
-                    script {
-                        sh '''
-                        rm -Rf .kube
-                        mkdir .kube
-                        cp $KUBECONFIG .kube/config
-                        cp helm-exam/values.yml
-                        sed -i "s+tag:.*+tag: ${DOCKER_TAG}+g" values.yml
-                        cat values.yml
-                        helm upgrade --install cast-service-dev helm-exam/ --values=values.yml --namespace dev
-                        
-                        cp helm-exam/values.yml
-                        sed -i "s+tag:.*+tag: ${DOCKER_TAG}+g" values.yml
-                        cat values.yml
-                        helm upgrade --install movie-service-dev helm-exam/ --values=values.yml --namespace dev
-                        '''
-                    }
-                }
-            }
-        }
-        stage('Deployment in staging') {
-            steps {
-                withCredentials([file(credentialsId: 'kubeconfig-file', variable: 'KUBECONFIG')]) {
-                    script {
-                        sh '''
-                        rm -Rf .kube
-                        mkdir .kube
-                        cp $KUBECONFIG .kube/config
-                        cp helm-exam/values.yml
-                        cat values.yml
-                        helm upgrade --install cast-db-staging helm-exam/ --values=values.yml --namespace staging
-                        
-                        cp helm-exam/values.yml
-                        cat values.yml
-                        helm upgrade --install movie-db-staging helm-exam/ --values=values.yml --namespace staging
-                        '''
-                    }
-                    script {
-                        sh '''
-                        rm -Rf .kube
-                        mkdir .kube
-                        cp $KUBECONFIG .kube/config
-                        cp helm-exam/values.yml
-                        sed -i "s+tag:.*+tag: ${DOCKER_TAG}+g" values.yml
-                        cat values.yml
-                        helm upgrade --install cast-service-staging helm-exam/ --values=values.yml --namespace staging
-                        
-                        cp helm-exam/values.yml
-                        sed -i "s+tag:.*+tag: ${DOCKER_TAG}+g" values.yml
-                        cat values.yml
-                        helm upgrade --install movie-service-staging helm-exam/ --values=values.yml --namespace staging
+                        kubectl delete namespace dev --ignore-not-found
+                        kubectl create namespace dev
+                        kubectl config set-context --current --namespace=dev
+                        helm upgrade --install cast-db-dev helm-exam/ --values=helm-exam/values-dev.yml --namespace dev
+                        helm upgrade --install movie-db-dev helm-exam/ --values=helm-exam/values-dev.yml --namespace dev
                         '''
                     }
                 }
@@ -109,32 +57,26 @@ pipeline {
                 withCredentials([file(credentialsId: 'kubeconfig-file', variable: 'KUBECONFIG')]) {
                     script {
                         sh '''
-                        rm -Rf .kube
-                        mkdir .kube
-                        cp $KUBECONFIG .kube/config
-                        cp helm-exam/values.yml
-                        cat values.yml
-                        helm upgrade --install cast-db-qa helm-exam/ --values=values.yml --namespace qa
-                        
-                        cp helm-exam/values.yml
-                        cat values.yml
-                        helm upgrade --install movie-db-qa helm-exam/ --values=values.yml --namespace qa
+                        kubectl delete namespace qa --ignore-not-found
+                        kubectl create namespace qa
+                        kubectl config set-context --current --namespace=qa
+                        helm upgrade --install cast-db-qa helm-exam/ --values=helm-exam/values-qa.yml --namespace qa
+                        helm upgrade --install movie-db-qa helm-exam/ --values=helm-exam/values-qa.yml --namespace qa
                         '''
                     }
+                }
+            }
+        }
+        stage('Deployment in staging') {
+            steps {
+                withCredentials([file(credentialsId: 'kubeconfig-file', variable: 'KUBECONFIG')]) {
                     script {
                         sh '''
-                        rm -Rf .kube
-                        mkdir .kube
-                        cp $KUBECONFIG .kube/config
-                        cp helm-exam/values.yml
-                        sed -i "s+tag:.*+tag: ${DOCKER_TAG}+g" values.yml
-                        cat values.yml
-                        helm upgrade --install cast-service-qa helm-exam/ --values=values.yml --namespace qa
-                        
-                        cp helm-exam/values.yml
-                        sed -i "s+tag:.*+tag: ${DOCKER_TAG}+g" values.yml
-                        cat values.yml
-                        helm upgrade --install movie-service-qa helm-exam/ --values=values.yml --namespace qa
+                        kubectl delete namespace staging --ignore-not-found
+                        kubectl create namespace staging
+                        kubectl config set-context --current --namespace=staging
+                        helm upgrade --install cast-db-staging helm-exam/ --values=helm-exam/values-staging.yml --namespace staging
+                        helm upgrade --install movie-db-staging helm-exam/ --values=helm-exam/values-staging.yml --namespace staging
                         '''
                     }
                 }
@@ -142,45 +84,40 @@ pipeline {
         }
         stage('Deployment in prod') {
             when {
-                expression { env.GIT_BRANCH == 'origin/master' }
+                branch 'master'
             }
             steps {
-                timeout(time: 15, unit: "MINUTES") {
-                    input message: 'Do you want to deploy in production?', ok: 'Yes'
+                timeout(time: 15, unit: 'MINUTES') {
+                    input message: 'Do you want to deploy to production?', ok: 'Yes'
                 }
                 withCredentials([file(credentialsId: 'kubeconfig-file', variable: 'KUBECONFIG')]) {
                     script {
                         sh '''
-                        rm -Rf .kube
-                        mkdir .kube
-                        cp $KUBECONFIG .kube/config
-                        cp helm-exam/values.yml
-                        cat values.yml
-                        helm upgrade --install cast-db-prod helm-exam/ --values=values.yml --namespace prod
-                        
-                        cp helm-exam/values.yml
-                        cat values.yml
-                        helm upgrade --install movie-db-prod helm-exam/ --values=values.yml --namespace prod
-                        '''
-                    }
-                    script {
-                        sh '''
-                        rm -Rf .kube
-                        mkdir .kube
-                        cp $KUBECONFIG .kube/config
-                        cp helm-exam/values.yml
-                        sed -i "s+tag:.*+tag: ${DOCKER_TAG}+g" values.yml
-                        cat values.yml
-                        helm upgrade --install cast-service-prod helm-exam/ --values=values.yml --namespace prod
-                        
-                        cp manifests/service/values/movie-service/values-prod.yaml values.yml
-                        sed -i "s+tag:.*+tag: ${DOCKER_TAG}+g" values.yml
-                        cat values.yml
-                        helm upgrade --install movie-service-prod helm-exam/ --values=values.yml --namespace prod
+                        kubectl delete namespace prod --ignore-not-found
+                        kubectl create namespace prod
+                        kubectl config set-context --current --namespace=prod
+                        helm upgrade --install cast-db-prod helm-exam/ --values=helm-exam/values-prod.yml --namespace prod
+                        helm upgrade --install movie-db-prod helm-exam/ --values=helm-exam/values-prod.yml --namespace prod
                         '''
                     }
                 }
             }
+        }
+    }
+    post {
+        always {
+            archiveArtifacts artifacts: '**/target/*.jar', allowEmptyArchive: true
+            junit 'target/test-*.xml'
+        }
+        success {
+            mail to: 'yumotoayaka@gmail.com',
+                 subject: "SUCCESS: Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]'",
+                 body: "Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]' succeeded."
+        }
+        failure {
+            mail to: 'yumotoayaka@gmail.com',
+                 subject: "FAILURE: Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]'",
+                 body: "Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]' failed."
         }
     }
 }
