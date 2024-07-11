@@ -104,11 +104,16 @@ pipeline {
                         kubectl delete all --all --namespace=dev || true
                         sleep 10
                         
-                        # Ensure all PVCs are deleted
-                        kubectl patch pvc movie-db-pvc --namespace=dev -p '{"metadata":{"finalizers":null}}' || true
-                        kubectl delete pvc movie-db-pvc --namespace=dev --ignore-not-found || true
-                        kubectl patch pvc cast-db-pvc --namespace=dev -p '{"metadata":{"finalizers":null}}' || true
-                        kubectl delete pvc cast-db-pvc --namespace=dev --ignore-not-found || true
+                        # Ensure all PVCs are deleted or patched
+                        if kubectl get pvc movie-db-pvc --namespace=dev; then
+                            kubectl patch pvc movie-db-pvc --namespace=dev -p '{"metadata":{"finalizers":null}}' || true
+                            kubectl delete pvc movie-db-pvc --namespace=dev --ignore-not-found || true
+                        fi
+                        
+                        if kubectl get pvc cast-db-pvc --namespace=dev; then
+                            kubectl patch pvc cast-db-pvc --namespace=dev -p '{"metadata":{"finalizers":null}}' || true
+                            kubectl delete pvc cast-db-pvc --namespace=dev --ignore-not-found || true
+                        fi
 
                         # Confirm PVCs are deleted
                         kubectl get pvc --namespace=dev
@@ -161,11 +166,16 @@ pipeline {
                         kubectl delete all --all --namespace=qa || true
                         sleep 10
                         
-                        # Ensure all PVCs are deleted
-                        kubectl patch pvc movie-db-pvc --namespace=qa -p '{"metadata":{"finalizers":null}}' || true
-                        kubectl delete pvc movie-db-pvc --namespace=qa --ignore-not-found || true
-                        kubectl patch pvc cast-db-pvc --namespace=qa -p '{"metadata":{"finalizers":null}}' || true
-                        kubectl delete pvc cast-db-pvc --namespace=qa --ignore-not-found || true
+                        # Ensure all PVCs are deleted or patched
+                        if kubectl get pvc movie-db-pvc --namespace=qa; then
+                            kubectl patch pvc movie-db-pvc --namespace=qa -p '{"metadata":{"finalizers":null}}' || true
+                            kubectl delete pvc movie-db-pvc --namespace=qa --ignore-not-found || true
+                        fi
+                        
+                        if kubectl get pvc cast-db-pvc --namespace=qa; then
+                            kubectl patch pvc cast-db-pvc --namespace=qa -p '{"metadata":{"finalizers":null}}' || true
+                            kubectl delete pvc cast-db-pvc --namespace=qa --ignore-not-found || true
+                        fi
 
                         # Confirm PVCs are deleted
                         kubectl get pvc --namespace=qa
@@ -218,11 +228,16 @@ pipeline {
                         kubectl delete all --all --namespace=staging || true
                         sleep 10
                         
-                        # Ensure all PVCs are deleted
-                        kubectl patch pvc movie-db-pvc --namespace=staging -p '{"metadata":{"finalizers":null}}' || true
-                        kubectl delete pvc movie-db-pvc --namespace=staging --ignore-not-found || true
-                        kubectl patch pvc cast-db-pvc --namespace=staging -p '{"metadata":{"finalizers":null}}' || true
-                        kubectl delete pvc cast-db-pvc --namespace=staging --ignore-not-found || true
+                        # Ensure all PVCs are deleted or patched
+                        if kubectl get pvc movie-db-pvc --namespace=staging; then
+                            kubectl patch pvc movie-db-pvc --namespace=staging -p '{"metadata":{"finalizers":null}}' || true
+                            kubectl delete pvc movie-db-pvc --namespace=staging --ignore-not-found || true
+                        fi
+                        
+                        if kubectl get pvc cast-db-pvc --namespace=staging; then
+                            kubectl patch pvc cast-db-pvc --namespace=staging -p '{"metadata":{"finalizers":null}}' || true
+                            kubectl delete pvc cast-db-pvc --namespace=staging --ignore-not-found || true
+                        fi
 
                         # Confirm PVCs are deleted
                         kubectl get pvc --namespace=staging
@@ -281,11 +296,16 @@ pipeline {
                         kubectl delete all --all --namespace=prod || true
                         sleep 10
                         
-                        # Ensure all PVCs are deleted
-                        kubectl patch pvc movie-db-pvc --namespace=prod -p '{"metadata":{"finalizers":null}}' || true
-                        kubectl delete pvc movie-db-pvc --namespace=prod --ignore-not-found || true
-                        kubectl patch pvc cast-db-pvc --namespace=prod -p '{"metadata":{"finalizers":null}}' || true
-                        kubectl delete pvc cast-db-pvc --namespace=prod --ignore-not-found || true
+                        # Ensure all PVCs are deleted or patched
+                        if kubectl get pvc movie-db-pvc --namespace=prod; then
+                            kubectl patch pvc movie-db-pvc --namespace=prod -p '{"metadata":{"finalizers":null}}' || true
+                            kubectl delete pvc movie-db-pvc --namespace=prod --ignore-not-found || true
+                        fi
+                        
+                        if kubectl get pvc cast-db-pvc --namespace=prod; then
+                            kubectl patch pvc cast-db-pvc --namespace=prod -p '{"metadata":{"finalizers":null}}' || true
+                            kubectl delete pvc cast-db-pvc --namespace=prod --ignore-not-found || true
+                        fi
 
                         # Confirm PVCs are deleted
                         kubectl get pvc --namespace=prod
