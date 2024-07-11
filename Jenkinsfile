@@ -55,6 +55,9 @@ pipeline {
                         kubectl create namespace dev
                         kubectl config set-context --current --namespace=dev
                         
+                        # Delete existing PVCs
+                        kubectl delete pvc --all --namespace=dev
+                        
                         helm upgrade --install cast-db-dev helm-exam/ --values=helm-exam/values.yaml --namespace dev
                         helm upgrade --install movie-db-dev helm-exam/ --values=helm-exam/values.yaml --namespace dev
                         '''
@@ -80,6 +83,9 @@ pipeline {
                         kubectl create namespace qa
                         kubectl config set-context --current --namespace=qa
                         
+                        # Delete existing PVCs
+                        kubectl delete pvc --all --namespace=qa
+                        
                         helm upgrade --install cast-db-qa helm-exam/ --values=helm-exam/values.yaml --namespace qa
                         helm upgrade --install movie-db-qa helm-exam/ --values=helm-exam/values.yaml --namespace qa
                         '''
@@ -104,6 +110,9 @@ pipeline {
                         kubectl delete namespace staging --ignore-not-found
                         kubectl create namespace staging
                         kubectl config set-context --current --namespace=staging
+                        
+                        # Delete existing PVCs
+                        kubectl delete pvc --all --namespace=staging
                         
                         helm upgrade --install cast-db-staging helm-exam/ --values=helm-exam/values.yaml --namespace staging
                         helm upgrade --install movie-db-staging helm-exam/ --values=helm-exam/values.yaml --namespace staging
@@ -135,6 +144,9 @@ pipeline {
                         kubectl delete namespace prod --ignore-not-found
                         kubectl create namespace prod
                         kubectl config set-context --current --namespace=prod
+                        
+                        # Delete existing PVCs
+                        kubectl delete pvc --all --namespace=prod
                         
                         helm upgrade --install cast-db-prod helm-exam/ --values=helm-exam/values.yaml --namespace prod
                         helm upgrade --install movie-db-prod helm-exam/ --values=helm-exam/values.yaml --namespace prod
