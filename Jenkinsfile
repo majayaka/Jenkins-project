@@ -63,13 +63,20 @@ pipeline {
                         # Ensure all PVCs are deleted
                         kubectl delete pvc movie-db-pvc --namespace=dev --ignore-not-found || true
                         kubectl delete pvc cast-db-pvc --namespace=dev --ignore-not-found || true
-                        
+
+                        # Confirm PVCs are deleted
+                        kubectl get pvc --namespace=dev
+
                         # Get PV names and delete them
                         pv_names=$(kubectl get pv -o jsonpath='{.items[?(@.spec.claimRef.namespace=="dev")].metadata.name}')
-                        for pv in $pv_names; do
-                            kubectl patch pv $pv -p '{"metadata":{"finalizers":null}}' || true
-                            kubectl delete pv $pv --ignore-not-found || true
-                        done
+                        if [ -n "$pv_names" ]; then
+                            for pv in $pv_names; do
+                                kubectl patch pv $pv -p '{"metadata":{"finalizers":null}}' || true
+                                kubectl delete pv $pv --ignore-not-found || true
+                            done
+                        else
+                            echo "No PVs found for namespace dev."
+                        fi
 
                         # Deploy the Helm charts
                         helm upgrade --install cast-db-dev helm-exam/ --values=helm-exam/values.yaml --namespace dev
@@ -106,13 +113,20 @@ pipeline {
                         kubectl delete pvc movie-db-pvc --namespace=qa --ignore-not-found || true
                         kubectl delete pvc cast-db-pvc --namespace=qa --ignore-not-found || true
 
+                        # Confirm PVCs are deleted
+                        kubectl get pvc --namespace=qa
+
                         # Get PV names and delete them
                         pv_names=$(kubectl get pv -o jsonpath='{.items[?(@.spec.claimRef.namespace=="qa")].metadata.name}')
-                        for pv in $pv_names; do
-                            kubectl patch pv $pv -p '{"metadata":{"finalizers":null}}' || true
-                            kubectl delete pv $pv --ignore-not-found || true
-                        done
-                        
+                        if [ -n "$pv_names" ]; then
+                            for pv in $pv_names; do
+                                kubectl patch pv $pv -p '{"metadata":{"finalizers":null}}' || true
+                                kubectl delete pv $pv --ignore-not-found || true
+                            done
+                        else
+                            echo "No PVs found for namespace qa."
+                        fi
+
                         # Deploy the Helm charts
                         helm upgrade --install cast-db-qa helm-exam/ --values=helm-exam/values.yaml --namespace qa
                         helm upgrade --install movie-db-qa helm-exam/ --values=helm-exam/values.yaml --namespace qa
@@ -148,12 +162,19 @@ pipeline {
                         kubectl delete pvc movie-db-pvc --namespace=staging --ignore-not-found || true
                         kubectl delete pvc cast-db-pvc --namespace=staging --ignore-not-found || true
 
+                        # Confirm PVCs are deleted
+                        kubectl get pvc --namespace=staging
+
                         # Get PV names and delete them
                         pv_names=$(kubectl get pv -o jsonpath='{.items[?(@.spec.claimRef.namespace=="staging")].metadata.name}')
-                        for pv in $pv_names; do
-                            kubectl patch pv $pv -p '{"metadata":{"finalizers":null}}' || true
-                            kubectl delete pv $pv --ignore-not-found || true
-                        done
+                        if [ -n "$pv_names" ]; then
+                            for pv in $pv_names; do
+                                kubectl patch pv $pv -p '{"metadata":{"finalizers":null}}' || true
+                                kubectl delete pv $pv --ignore-not-found || true
+                            done
+                        else
+                            echo "No PVs found for namespace staging."
+                        fi
 
                         # Deploy the Helm charts
                         helm upgrade --install cast-db-staging helm-exam/ --values=helm-exam/values.yaml --namespace staging
@@ -196,12 +217,19 @@ pipeline {
                         kubectl delete pvc movie-db-pvc --namespace=prod --ignore-not-found || true
                         kubectl delete pvc cast-db-pvc --namespace=prod --ignore-not-found || true
 
+                        # Confirm PVCs are deleted
+                        kubectl get pvc --namespace=prod
+
                         # Get PV names and delete them
                         pv_names=$(kubectl get pv -o jsonpath='{.items[?(@.spec.claimRef.namespace=="prod")].metadata.name}')
-                        for pv in $pv_names; do
-                            kubectl patch pv $pv -p '{"metadata":{"finalizers":null}}' || true
-                            kubectl delete pv $pv --ignore-not-found || true
-                        done
+                        if [ -n "$pv_names" ]; then
+                            for pv in $pv_names; do
+                                kubectl patch pv $pv -p '{"metadata":{"finalizers":null}}' || true
+                                kubectl delete pv $pv --ignore-not-found || true
+                            done
+                        else
+                            echo "No PVs found for namespace prod."
+                        fi
 
                         # Deploy the Helm charts
                         helm upgrade --install cast-db-prod helm-exam/ --values=helm-exam/values.yaml --namespace prod
@@ -214,16 +242,11 @@ pipeline {
     }
     post {
         always {
-            archiveArtifacts artifacts: '**/target/*.jar', allowEmptyArchive: true
+            archiveArtifacts artifacts: 'target/test-*.xml', allowEmptyArchive: true
             junit 'target/test-*.xml'
         }
-        success {
-            mail to: 'yumotoayaka@gmail.com',
-                 subject: "SUCCESS: Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]'",
-                 body: "Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]' succeeded."
-        }
         failure {
-            mail to: 'yumotoayaka@gmail.com',
+            emailext to: 'your-email@example.com',
                  subject: "FAILURE: Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]'",
                  body: "Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]' failed."
         }
