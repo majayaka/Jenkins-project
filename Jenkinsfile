@@ -62,7 +62,11 @@ pipeline {
                         # Ensure all PVCs are deleted
                         kubectl delete pvc movie-db-pvc --namespace=dev --ignore-not-found
                         kubectl delete pvc cast-db-pvc --namespace=dev --ignore-not-found
-
+                        
+                        # Patch PVs to remove finalizers and force delete them
+                        kubectl patch pv pvc-c748c13d-627b-4ed5-9bac-89e32f5f035a -p '{"metadata":{"finalizers":null}}' || true
+                        kubectl patch pv pvc-ca75f5e8-5a4d-4d55-afd5-f686d44b0f17 -p '{"metadata":{"finalizers":null}}' || true
+                        
                         # Ensure all PVs are deleted
                         kubectl delete pv pvc-c748c13d-627b-4ed5-9bac-89e32f5f035a --ignore-not-found
                         kubectl delete pv pvc-ca75f5e8-5a4d-4d55-afd5-f686d44b0f17 --ignore-not-found
@@ -103,6 +107,10 @@ pipeline {
                         # Ensure all PVCs are deleted
                         kubectl delete pvc movie-db-pvc --namespace=qa --ignore-not-found
                         kubectl delete pvc cast-db-pvc --namespace=qa --ignore-not-found
+                        
+                        # Patch PVs to remove finalizers and force delete them
+                        kubectl patch pv pvc-c748c13d-627b-4ed5-9bac-89e32f5f035a -p '{"metadata":{"finalizers":null}}' || true
+                        kubectl patch pv pvc-ca75f5e8-5a4d-4d55-afd5-f686d44b0f17 -p '{"metadata":{"finalizers":null}}' || true
 
                         # Ensure all PVs are deleted
                         kubectl delete pv pvc-c748c13d-627b-4ed5-9bac-89e32f5f035a --ignore-not-found
@@ -144,6 +152,10 @@ pipeline {
                         # Ensure all PVCs are deleted
                         kubectl delete pvc movie-db-pvc --namespace=staging --ignore-not-found
                         kubectl delete pvc cast-db-pvc --namespace=staging --ignore-not-found
+                        
+                        # Patch PVs to remove finalizers and force delete them
+                        kubectl patch pv pvc-c748c13d-627b-4ed5-9bac-89e32f5f035a -p '{"metadata":{"finalizers":null}}' || true
+                        kubectl patch pv pvc-ca75f5e8-5a4d-4d55-afd5-f686d44b0f17 -p '{"metadata":{"finalizers":null}}' || true
 
                         # Ensure all PVs are deleted
                         kubectl delete pv pvc-c748c13d-627b-4ed5-9bac-89e32f5f035a --ignore-not-found
@@ -191,6 +203,10 @@ pipeline {
                         # Ensure all PVCs are deleted
                         kubectl delete pvc movie-db-pvc --namespace=prod --ignore-not-found
                         kubectl delete pvc cast-db-pvc --namespace=prod --ignore-not-found
+                        
+                        # Patch PVs to remove finalizers and force delete them
+                        kubectl patch pv pvc-c748c13d-627b-4ed5-9bac-89e32f5f035a -p '{"metadata":{"finalizers":null}}' || true
+                        kubectl patch pv pvc-ca75f5e8-5a4d-4d55-afd5-f686d44b0f17 -p '{"metadata":{"finalizers":null}}' || true
 
                         # Ensure all PVs are deleted
                         kubectl delete pv pvc-c748c13d-627b-4ed5-9bac-89e32f5f035a --ignore-not-found
