@@ -57,19 +57,22 @@ pipeline {
                         kubectl config set-context --current --namespace=dev
                         
                         # Delete all resources in the namespace
-                        kubectl delete all --all --namespace=dev
+                        kubectl delete all --all --namespace=dev || true
                         sleep 10
                         
-                        # Ensure all PVCs and PVs are deleted
-                        kubectl delete pvc movie-db-pvc --namespace=dev --ignore-not-found
-                        kubectl delete pvc cast-db-pvc --namespace=dev --ignore-not-found
+                        # Ensure all PVCs are deleted
+                        kubectl delete pvc movie-db-pvc --namespace=dev --ignore-not-found || true
+                        kubectl delete pvc cast-db-pvc --namespace=dev --ignore-not-found || true
 
-                        # Ensure PVs are deleted
-                        for pv in $(kubectl get pv -o jsonpath='{.items[*].metadata.name}'); do
+                        # Patch PVs to remove finalizers
+                        for pv in $(kubectl get pv -o jsonpath='{.items[?(@.spec.claimRef.namespace=="dev")].metadata.name}'); do
                             kubectl patch pv $pv -p '{"metadata":{"finalizers":null}}' || true
                         done
 
-                        kubectl get pv | grep "dev/" | awk '{print $1}' | xargs -I {} kubectl delete pv {} --ignore-not-found
+                        # Delete PVs
+                        for pv in $(kubectl get pv -o jsonpath='{.items[?(@.spec.claimRef.namespace=="dev")].metadata.name}'); do
+                            kubectl delete pv $pv --ignore-not-found || true
+                        done
 
                         # Deploy the Helm charts
                         helm upgrade --install cast-db-dev helm-exam/ --values=helm-exam/values.yaml --namespace dev
@@ -99,19 +102,22 @@ pipeline {
                         kubectl config set-context --current --namespace=qa
                         
                         # Delete all resources in the namespace
-                        kubectl delete all --all --namespace=qa
+                        kubectl delete all --all --namespace=qa || true
                         sleep 10
                         
-                        # Ensure all PVCs and PVs are deleted
-                        kubectl delete pvc movie-db-pvc --namespace=qa --ignore-not-found
-                        kubectl delete pvc cast-db-pvc --namespace=qa --ignore-not-found
+                        # Ensure all PVCs are deleted
+                        kubectl delete pvc movie-db-pvc --namespace=qa --ignore-not-found || true
+                        kubectl delete pvc cast-db-pvc --namespace=qa --ignore-not-found || true
 
-                        # Ensure PVs are deleted
-                        for pv in $(kubectl get pv -o jsonpath='{.items[*].metadata.name}'); do
+                        # Patch PVs to remove finalizers
+                        for pv in $(kubectl get pv -o jsonpath='{.items[?(@.spec.claimRef.namespace=="qa")].metadata.name}'); do
                             kubectl patch pv $pv -p '{"metadata":{"finalizers":null}}' || true
                         done
 
-                        kubectl get pv | grep "qa/" | awk '{print $1}' | xargs -I {} kubectl delete pv {} --ignore-not-found
+                        # Delete PVs
+                        for pv in $(kubectl get pv -o jsonpath='{.items[?(@.spec.claimRef.namespace=="qa")].metadata.name}'); do
+                            kubectl delete pv $pv --ignore-not-found || true
+                        done
                         
                         # Deploy the Helm charts
                         helm upgrade --install cast-db-qa helm-exam/ --values=helm-exam/values.yaml --namespace qa
@@ -141,19 +147,22 @@ pipeline {
                         kubectl config set-context --current --namespace=staging
                         
                         # Delete all resources in the namespace
-                        kubectl delete all --all --namespace=staging
+                        kubectl delete all --all --namespace=staging || true
                         sleep 10
                         
-                        # Ensure all PVCs and PVs are deleted
-                        kubectl delete pvc movie-db-pvc --namespace=staging --ignore-not-found
-                        kubectl delete pvc cast-db-pvc --namespace=staging --ignore-not-found
+                        # Ensure all PVCs are deleted
+                        kubectl delete pvc movie-db-pvc --namespace=staging --ignore-not-found || true
+                        kubectl delete pvc cast-db-pvc --namespace=staging --ignore-not-found || true
 
-                        # Ensure PVs are deleted
-                        for pv in $(kubectl get pv -o jsonpath='{.items[*].metadata.name}'); do
+                        # Patch PVs to remove finalizers
+                        for pv in $(kubectl get pv -o jsonpath='{.items[?(@.spec.claimRef.namespace=="staging")].metadata.name}'); do
                             kubectl patch pv $pv -p '{"metadata":{"finalizers":null}}' || true
                         done
 
-                        kubectl get pv | grep "staging/" | awk '{print $1}' | xargs -I {} kubectl delete pv {} --ignore-not-found
+                        # Delete PVs
+                        for pv in $(kubectl get pv -o jsonpath='{.items[?(@.spec.claimRef.namespace=="staging")].metadata.name}'); do
+                            kubectl delete pv $pv --ignore-not-found || true
+                        done
 
                         # Deploy the Helm charts
                         helm upgrade --install cast-db-staging helm-exam/ --values=helm-exam/values.yaml --namespace staging
@@ -189,20 +198,23 @@ pipeline {
                         kubectl config set-context --current --namespace=prod
                         
                         # Delete all resources in the namespace
-                        kubectl delete all --all --namespace=prod
+                        kubectl delete all --all --namespace=prod || true
                         sleep 10
                         
-                        # Ensure all PVCs and PVs are deleted
-                        kubectl delete pvc movie-db-pvc --namespace=prod --ignore-not-found
-                        kubectl delete pvc cast-db-pvc --namespace=prod --ignore-not-found
+                        # Ensure all PVCs are deleted
+                        kubectl delete pvc movie-db-pvc --namespace=prod --ignore-not-found || true
+                        kubectl delete pvc cast-db-pvc --namespace=prod --ignore-not-found || true
 
-                        # Ensure PVs are deleted
-                        for pv in $(kubectl get pv -o jsonpath='{.items[*].metadata.name}'); do
+                        # Patch PVs to remove finalizers
+                        for pv in $(kubectl get pv -o jsonpath='{.items[?(@.spec.claimRef.namespace=="prod")].metadata.name}'); do
                             kubectl patch pv $pv -p '{"metadata":{"finalizers":null}}' || true
                         done
 
-                        kubectl get pv | grep "prod/" | awk '{print $1}' | xargs -I {} kubectl delete pv {} --ignore-not-found
-                        
+                        # Delete PVs
+                        for pv in $(kubectl get pv -o jsonpath='{.items[?(@.spec.claimRef.namespace=="prod")].metadata.name}'); do
+                            kubectl delete pv $pv --ignore-not-found || true
+                        done
+
                         # Deploy the Helm charts
                         helm upgrade --install cast-db-prod helm-exam/ --values=helm-exam/values.yaml --namespace prod
                         helm upgrade --install movie-db-prod helm-exam/ --values=helm-exam/values.yaml --namespace prod
