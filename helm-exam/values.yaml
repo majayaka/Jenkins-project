@@ -5,7 +5,6 @@ movieService:
   replicaCount: 1
   servicePort: 8001
   containerPort: 8000
-  nodePort: 30001
   environment:
     DATABASE_URI: "postgresql://movie_db_username:movie_db_password@movie_db/movie_db_dev"
     CAST_SERVICE_HOST_URL: "http://cast-service:8000/api/v1/casts/"
@@ -16,7 +15,6 @@ castService:
   replicaCount: 1
   servicePort: 8002
   containerPort: 8000
-  nodePort: 30002
   environment:
     DATABASE_URI: "postgresql://cast_db_username:cast_db_password@cast_db:5432/cast_db_dev"
 
