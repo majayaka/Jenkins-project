@@ -171,7 +171,6 @@ pipeline {
         }
         stage('Deploy to staging-env') {
             steps {
-                input message: 'Do you want to deploy to staging?', ok: 'Deploy'
                 withCredentials([file(credentialsId: 'kubeconfig-file', variable: 'KUBECONFIG_FILE')]) {
                     script {
                         sh '''
@@ -220,7 +219,6 @@ pipeline {
         }
         stage('Deploy to production') {
             steps {
-                input message: 'Do you want to deploy to production?', ok: 'Deploy'
                 withCredentials([file(credentialsId: 'kubeconfig-file', variable: 'KUBECONFIG_FILE')]) {
                     script {
                         sh '''
