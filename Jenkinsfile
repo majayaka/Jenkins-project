@@ -5,23 +5,11 @@ pipeline {
         DOCKER_IMAGE_MOVIE = "movie-service"
         DOCKER_TAG = "latest" 
         DOCKER_PASS = credentials("DOCKER_HUB_PASS")
+        KUBECONFIG = "/tmp/kubeconfig"
     }
     agent any
-    options {
-        timeout(time: 1, unit: 'HOURS')  // Set a timeout for the pipeline execution
-        buildDiscarder(logRotator(numToKeepStr: '10'))  // Discard old builds to save space
-    }
     stages {
-        stage('Checkout') {
-            steps {
-                script {
-                    def branch = env.GIT_BRANCH ?: 'master'
-                    echo "Current branch is: ${branch}"
-                    checkout scm
-                }
-            }
-        }
-        stage('Docker Build Images') {
+        stage('Docker Build Image') {
             parallel {
                 stage('Build Cast Service') {
                     steps {
@@ -67,91 +55,113 @@ pipeline {
                 }
             }
         }
-        stage('Deploy to Environments') {
-            matrix {
-                axes {
-                    axis {
-                        name 'ENV'
-                        values 'dev', 'qa', 'staging', 'prod'
+        stage('Deploy to dev-env') {
+            steps {
+                withCredentials([file(credentialsId: 'kubeconfig-file', variable: 'KUBECONFIG_FILE')]) {
+                    script {
+                        sh '''
+                            rm -Rf .kube
+                            mkdir .kube
+                            cp $KUBECONFIG_FILE $KUBECONFIG
+
+                            # Check if the release exists
+                            if helm status dev-env --namespace dev >/dev/null 2>&1; then
+                                # Release exists, perform an upgrade
+                                helm upgrade --install dev-env ./microservices --namespace dev --set castService.image.tag=${DOCKER_TAG},movieService.image.tag=${DOCKER_TAG}
+                            else
+                                # Release does not exist, perform an installation
+                                helm install dev-env ./microservices --namespace dev --set castService.image.tag=${DOCKER_TAG},movieService.image.tag=${DOCKER_TAG}
+                            fi
+                        '''
                     }
                 }
-                stages {
-                    stage('Deploy') {
-                        steps {
-                            script {
-                                if (env.ENV == 'prod') {
-                                    input message: "Deploy to ${ENV}?", ok: "Deploy" 
-                                }
-                                sh '''
-                                    rm -Rf .kube
-                                    mkdir .kube
-                                    cat $KUBECONFIG > .kube/config
+            }
+        }
+        stage('Deploy to qa-env') {
+            steps {
+                withCredentials([file(credentialsId: 'kubeconfig-file', variable: 'KUBECONFIG_FILE')]) {
+                    script {
+                        sh '''
+                            rm -Rf .kube
+                            mkdir .kube
+                            cp $KUBECONFIG_FILE $KUBECONFIG
+                            
+                            # Check if the release exists
+                            if helm status qa-env --namespace qa >/dev/null 2>&1; then
+                                # Release exists, perform an upgrade
+                                helm upgrade --install qa-env ./microservices --namespace qa --set castService.image.tag=${DOCKER_TAG},movieService.image.tag=${DOCKER_TAG} --set namespace=qa --set ingress.host=qa.datascientest-landes.cloudns.ch
+                            else
+                                # Release does not exist, perform an installation
+                                helm install qa-env ./microservices --namespace qa --set castService.image.tag=${DOCKER_TAG},movieService.image.tag=${DOCKER_TAG} --set namespace=qa --set ingress.host=qa.datascientest-landes.cloudns.ch
+                            fi
+                        '''
+                    }
+                }
+            }
+        }
+        stage('Deploy to staging-env') {
+            steps {
+                input message: 'Do you want to deploy to production?', ok: 'Deploy'
+                withCredentials([file(credentialsId: 'kubeconfig-file', variable: 'KUBECONFIG_FILE')]) {
+                    script {
+                        sh '''
+                            rm -Rf .kube
+                            mkdir .kube
+                            cp $KUBECONFIG_FILE $KUBECONFIG
 
-                                    # Ensure the namespace is clean
-                                    kubectl delete namespace ${ENV} --ignore-not-found
-                                    kubectl create namespace ${ENV}
-                                    kubectl config set-context --current --namespace=${ENV}
-                                    
-                                    # Delete all resources in the namespace
-                                    kubectl delete all --all --namespace=${ENV} || true
-                                    sleep 10
-                                    
-                                    # Ensure all PVCs are deleted or patched
-                                    if kubectl get pvc movie-db-pvc --namespace=${ENV}; then
-                                        kubectl patch pvc movie-db-pvc --namespace=${ENV} -p '{"metadata":{"finalizers":null}}' || true
-                                        kubectl delete pvc movie-db-pvc --namespace=${ENV} --ignore-not-found || true
-                                    fi
-                                    
-                                    if kubectl get pvc cast-db-pvc --namespace=${ENV}; then
-                                        kubectl patch pvc cast-db-pvc --namespace=${ENV} -p '{"metadata":{"finalizers":null}}' || true
-                                        kubectl delete pvc cast-db-pvc --namespace=${ENV} --ignore-not-found || true
-                                    fi
+                            # Check if the release exists
+                            if helm status staging-env --namespace staging >/dev/null 2>&1; then
+                                # Release exists, perform an upgrade
+                                helm upgrade --install staging-env ./microservices --namespace staging --set castService.image.tag=${DOCKER_TAG},movieService.image.tag=${DOCKER_TAG} --set namespace=staging --set ingress.host=staging.datascientest-landes.cloudns.ch
+                            else
+                                # Release does not exist, perform an installation
+                                helm install staging-env ./microservices --namespace staging --set castService.image.tag=${DOCKER_TAG},movieService.image.tag=${DOCKER_TAG} --set namespace=staging --set ingress.host=staging.datascientest-landes.cloudns.ch
+                            fi
+                        '''
+                    }
+                }
+            }
+        }
+        stage('Deploy to production') {
+            steps {
+                input message: 'Do you want to deploy to production?', ok: 'Deploy'
+                withCredentials([file(credentialsId: 'kubeconfig-file', variable: 'KUBECONFIG_FILE')]) {
+                    script {
+                        sh '''
+                            rm -Rf .kube
+                            mkdir .kube
+                            cp $KUBECONFIG_FILE $KUBECONFIG
 
-                                    # Confirm PVCs are deleted
-                                    kubectl get pvc --namespace=${ENV}
-
-                                    # Get PV names and delete them
-                                    pv_names=$(kubectl get pv -o jsonpath='{.items[?(@.spec.claimRef.namespace=="${ENV}")].metadata.name}')
-                                    if [ -n "$pv_names" ]; then
-                                        for pv in $pv_names; do
-                                            kubectl patch pv $pv -p '{"metadata":{"finalizers":null}}' || true
-                                            kubectl delete pv $pv --ignore-not-found || true
-                                        done
-                                    else
-                                        echo "No PVs found for namespace ${ENV}."
-                                    fi
-
-                                    # Fix PVC metadata if it exists
-                                    if kubectl get pvc movie-db-pvc --namespace=${ENV}; then
-                                        kubectl annotate pvc movie-db-pvc meta.helm.sh/release-name=movie-db-${ENV} --overwrite
-                                        kubectl annotate pvc movie-db-pvc meta.helm.sh/release-namespace=${ENV} --overwrite
-                                    fi
-
-                                    # Fix any conflicting PVC ownership annotations
-                                    if kubectl get pvc movie-db-pvc --namespace=${ENV}; then
-                                        kubectl patch pvc movie-db-pvc --namespace=${ENV} -p '{"metadata":{"annotations":{"meta.helm.sh/release-name":"movie-db-${ENV}","meta.helm.sh/release-namespace":"${ENV}"}}}'
-                                    fi
-
-                                    # Deploy the Helm charts
-                                    helm upgrade --install cast-db-${ENV} helm-exam/ --values=helm-exam/values.yaml --namespace ${ENV}
-                                    helm upgrade --install movie-db-${ENV} helm-exam/ --values=helm-exam/values.yaml --namespace ${ENV}
-                                '''
-                            }
-                        }
+                            # Check if the release exists
+                            if helm status production-env --namespace prod >/dev/null 2>&1; then
+                                # Release exists, perform an upgrade
+                                helm upgrade production-env ./microservices \
+                                    --namespace prod \
+                                    --set castService.image.tag=${DOCKER_TAG} \
+                                    --set movieService.image.tag=${DOCKER_TAG} \
+                                    --set namespace=prod \
+                                    --set ingress.host=prod.datascientest-landes.cloudns.ch
+                            else
+                                # Release does not exist, perform an installation
+                                helm install production-env ./microservices \
+                                    --namespace prod \
+                                    --set castService.image.tag=${DOCKER_TAG} \
+                                    --set movieService.image.tag=${DOCKER_TAG} \
+                                    --set namespace=prod \
+                                    --set ingress.host=prod.datascientest-landes.cloudns.ch
+                            fi
+                        '''
                     }
                 }
             }
         }
     }
     post {
-        always {
-            archiveArtifacts artifacts: 'target/test-*.xml', allowEmptyArchive: true
-            junit 'target/test-*.xml'
+        success {
+            echo 'Pipeline completed successfully.'
         }
         failure {
-            emailext to: 'yumotoayaka@gmail.com',
-                subject: "FAILURE: Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]'",
-                body: "Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]' failed."
+            echo 'Pipeline failed.'
         }
     }
 }
