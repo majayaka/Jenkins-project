@@ -67,10 +67,10 @@ pipeline {
                             # Check if the release exists
                             if helm status dev-env --namespace dev >/dev/null 2>&1; then
                                 # Release exists, perform an upgrade
-                                helm upgrade --install dev-env ./microservices --namespace dev --set castService.image.tag=${DOCKER_TAG},movieService.image.tag=${DOCKER_TAG}
+                                helm upgrade --install dev-env ./helm-exam --namespace dev --set castService.image.tag=${DOCKER_TAG},movieService.image.tag=${DOCKER_TAG}
                             else
                                 # Release does not exist, perform an installation
-                                helm install dev-env ./microservices --namespace dev --set castService.image.tag=${DOCKER_TAG},movieService.image.tag=${DOCKER_TAG}
+                                helm install dev-env ./helm-exam --namespace dev --set castService.image.tag=${DOCKER_TAG},movieService.image.tag=${DOCKER_TAG}
                             fi
                         '''
                     }
@@ -89,10 +89,10 @@ pipeline {
                             # Check if the release exists
                             if helm status qa-env --namespace qa >/dev/null 2>&1; then
                                 # Release exists, perform an upgrade
-                                helm upgrade --install qa-env ./microservices --namespace qa --set castService.image.tag=${DOCKER_TAG},movieService.image.tag=${DOCKER_TAG} --set namespace=qa --set ingress.host=qa.datascientest-landes.cloudns.ch
+                                helm upgrade --install qa-env ./helm-exam --namespace qa --set castService.image.tag=${DOCKER_TAG},movieService.image.tag=${DOCKER_TAG} --set namespace=qa --set ingress.host=qa.datascientest-landes.cloudns.ch
                             else
                                 # Release does not exist, perform an installation
-                                helm install qa-env ./microservices --namespace qa --set castService.image.tag=${DOCKER_TAG},movieService.image.tag=${DOCKER_TAG} --set namespace=qa --set ingress.host=qa.datascientest-landes.cloudns.ch
+                                helm install qa-env ./helm-exam --namespace qa --set castService.image.tag=${DOCKER_TAG},movieService.image.tag=${DOCKER_TAG} --set namespace=qa --set ingress.host=qa.datascientest-landes.cloudns.ch
                             fi
                         '''
                     }
@@ -101,7 +101,7 @@ pipeline {
         }
         stage('Deploy to staging-env') {
             steps {
-                input message: 'Do you want to deploy to production?', ok: 'Deploy'
+                input message: 'Do you want to deploy to staging?', ok: 'Deploy'
                 withCredentials([file(credentialsId: 'kubeconfig-file', variable: 'KUBECONFIG_FILE')]) {
                     script {
                         sh '''
@@ -112,10 +112,10 @@ pipeline {
                             # Check if the release exists
                             if helm status staging-env --namespace staging >/dev/null 2>&1; then
                                 # Release exists, perform an upgrade
-                                helm upgrade --install staging-env ./microservices --namespace staging --set castService.image.tag=${DOCKER_TAG},movieService.image.tag=${DOCKER_TAG} --set namespace=staging --set ingress.host=staging.datascientest-landes.cloudns.ch
+                                helm upgrade --install staging-env ./helm-exam --namespace staging --set castService.image.tag=${DOCKER_TAG},movieService.image.tag=${DOCKER_TAG} --set namespace=staging --set ingress.host=staging.datascientest-landes.cloudns.ch
                             else
                                 # Release does not exist, perform an installation
-                                helm install staging-env ./microservices --namespace staging --set castService.image.tag=${DOCKER_TAG},movieService.image.tag=${DOCKER_TAG} --set namespace=staging --set ingress.host=staging.datascientest-landes.cloudns.ch
+                                helm install staging-env ./helm-exam --namespace staging --set castService.image.tag=${DOCKER_TAG},movieService.image.tag=${DOCKER_TAG} --set namespace=staging --set ingress.host=staging.datascientest-landes.cloudns.ch
                             fi
                         '''
                     }
@@ -135,7 +135,7 @@ pipeline {
                             # Check if the release exists
                             if helm status production-env --namespace prod >/dev/null 2>&1; then
                                 # Release exists, perform an upgrade
-                                helm upgrade production-env ./microservices \
+                                helm upgrade production-env ./helm-exam \
                                     --namespace prod \
                                     --set castService.image.tag=${DOCKER_TAG} \
                                     --set movieService.image.tag=${DOCKER_TAG} \
@@ -143,7 +143,7 @@ pipeline {
                                     --set ingress.host=prod.datascientest-landes.cloudns.ch
                             else
                                 # Release does not exist, perform an installation
-                                helm install production-env ./microservices \
+                                helm install production-env ./helm-exam \
                                     --namespace prod \
                                     --set castService.image.tag=${DOCKER_TAG} \
                                     --set movieService.image.tag=${DOCKER_TAG} \
